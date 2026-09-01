@@ -162,6 +162,21 @@ so losing it means every future version has to be installed fresh.
 `mobile/android/`, `mobile/www/` and `node_modules/` are all generated and
 git-ignored; the four small files in `mobile/` reproduce them.
 
+## Publishing
+
+`store/` holds everything the Google Play listing needs:
+
+- `listing.md` — app name, short and full descriptions, content-rating and data
+  safety answers, and the asset checklist
+- `feature-graphic.png` — the required 1024x500 banner
+- `screenshots/` — phone screenshots
+- `make_store_art.py` — regenerates the feature graphic
+
+The privacy policy Play requires is served at
+[`/privacy.html`](https://swatian1989.github.io/moto-racer/privacy.html).
+
+Build the upload bundle with `python mobile/build_apk.py --aab`.
+
 ## Tuning
 
 `ECONOMY_RATE` near the top of the progression code scales how fast coins come
