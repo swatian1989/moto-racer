@@ -74,6 +74,8 @@ body.no-touch #pad{display:none}
 /* toast for install / update feedback */
 #toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:50;max-width:88vw;padding:11px 18px;border-radius:30px;background:rgba(8,10,22,.92);border:1px solid rgba(255,255,255,.22);color:#ffe6cf;font-size:12px;letter-spacing:1px;text-align:center;opacity:0;pointer-events:none;transition:opacity .25s}
 #toast.show{opacity:1;pointer-events:auto}
+.exitbtn{border-color:rgba(255,90,60,.55);color:#ff8a6a}
+.exitbtn.armed{background:#ff3a1a;border-color:#ff3a1a;color:#fff}
 #toast button{margin-left:10px;padding:5px 12px;font-size:11px;font-weight:800;letter-spacing:1px;color:#1a1230;background:#ffd23a;border:none;border-radius:20px;cursor:pointer}
 
 /* ---------- menus: garage / upgrades / settings ---------- */
@@ -201,7 +203,7 @@ input[type=range]{width:120px;accent-color:#ffd23a}
   <div class="sub hidden" id="iosHint">On iPhone: tap <b>Share</b> then <b>Add to Home Screen</b></div>
   <div class="keyhint hidden" id="keyHint">
     <b>←</b> <b>→</b> steer · <b>↑</b> gas · <b>Space</b> jump · <b>N</b> nitro<br>
-    <b>P</b> pause · <b>F</b> fullscreen · <b>M</b> mute
+    <b>P</b> pause · <b>F</b> fullscreen · <b>M</b> mute · <b>Q</b> quit
   </div>
   <div class="wallet">◎ <span class="walletVal">0</span> <small>COINS</small></div>
   <div class="menurow">
@@ -209,6 +211,7 @@ input[type=range]{width:120px;accent-color:#ffd23a}
     <button class="menubtn" id="worldBtn">WORLDS</button>
     <button class="menubtn" id="shopBtn">UPGRADES</button>
     <button class="menubtn" id="setBtn">SETTINGS</button>
+    <button class="menubtn exitbtn" id="exitBtn">EXIT</button>
   </div>
   <div id="missionBox"></div>
 </div>
@@ -218,6 +221,7 @@ input[type=range]{width:120px;accent-color:#ffd23a}
   <div class="sub">Engine idling…</div>
   <button class="bigbtn" id="resumeBtn">RESUME</button>
   <button class="ghostbtn" id="quitBtn">END RUN</button>
+  <button class="ghostbtn exitbtn" id="exitBtn2">EXIT GAME</button>
 </div>
 
 <div class="screen hidden" id="over">
@@ -1448,6 +1452,8 @@ document.addEventListener('keydown',e=>{
   if(c==='KeyP'||c==='Escape'){e.preventDefault();setPaused(!G.paused);}
   if(c==='KeyF'){e.preventDefault();toggleFullscreen();}
   if(c==='KeyM'){e.preventDefault();setMuted(!G.muted);}
+  // Q quits, but only when not actively riding, so it cannot end a run by accident
+  if(c==='KeyQ'&&(G.state!=='play'||G.paused)){e.preventDefault();if(window.motoQuit)window.motoQuit();}
   if(c==='Space'||c==='Enter'){
     e.preventDefault();initAudio();
     if(G.state==='idle'||G.state==='over')startGame();
@@ -1923,6 +1929,53 @@ loadThree(startMoto);
     document.getElementById('keyHint').classList.remove('hidden');
     document.getElementById('ctrlLine').textContent='Keyboard: steer \u00b7 gas \u00b7 jump \u00b7 nitro';
   }
+
+  // ---- leaving the game ----
+  // Closing is genuinely different per platform: the desktop build can destroy
+  // its own window, an installed PWA is usually allowed to close itself, and a
+  // plain browser tab is not allowed to and has to be told so.
+  function inDesktopApp(){
+    return !!(window.pywebview && window.pywebview.api && window.pywebview.api.quit);
+  }
+  function reallyQuit(){
+    if(inDesktopApp()){
+      try{ window.pywebview.api.quit(); return; }catch(e){}
+    }
+    try{ window.close(); }catch(e){}
+    setTimeout(function(){
+      if(document.hidden)return;               // it worked, we are on the way out
+      if(document.fullscreenElement&&document.exitFullscreen){
+        // at least give back the screen, which is the trap people actually hit
+        try{ document.exitFullscreen(); }catch(e){}
+        toast('Left fullscreen. Close this tab or window to quit.',5000);
+      }else{
+        toast('Your browser will not let a page close itself \u2014 close this tab or window to quit.',6000);
+      }
+    },400);
+  }
+  // Two taps, so a stray press never dumps someone out of a good run.
+  function armExit(btn){
+    if(!btn)return;
+    var armed=false,t=null;
+    btn.addEventListener('click',function(){
+      if(!armed){
+        armed=true;btn.classList.add('armed');
+        var was=btn.textContent;btn.textContent='TAP AGAIN TO EXIT';
+        clearTimeout(t);
+        t=setTimeout(function(){armed=false;btn.classList.remove('armed');btn.textContent=was;},3000);
+        return;
+      }
+      reallyQuit();
+    });
+  }
+  armExit(document.getElementById('exitBtn'));
+  armExit(document.getElementById('exitBtn2'));
+  window.motoQuit=function(){
+    var b=document.getElementById('exitBtn2');
+    var paused=document.getElementById('paused');
+    if(!b||paused.classList.contains('hidden'))b=document.getElementById('exitBtn');
+    if(b)b.click();
+  };
 
   if('serviceWorker' in navigator){
     // Reloading on controllerchange is only correct for a *replacement* worker;

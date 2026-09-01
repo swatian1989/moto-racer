@@ -123,6 +123,24 @@ def open_in_browser(url):
     return webbrowser.open(url)
 
 
+class QuitApi:
+    """Exposed to the page as window.pywebview.api.
+
+    The game's EXIT button needs to close the *application*, not just the
+    page: a fullscreen window with no browser chrome otherwise has no way
+    out at all. The page feature-detects this object to tell a desktop
+    build apart from a browser tab.
+    """
+
+    def __init__(self, window=None):
+        self.window = window
+
+    def quit(self):
+        if self.window is not None:
+            self.window.destroy()
+        return True
+
+
 def keep_alive_window(url):
     """The browser fallback leaves nothing on screen owning the process, and a
     windowless build would have no way to quit short of Task Manager."""
@@ -173,8 +191,11 @@ def main():
     if not args.browser:
         try:
             import webview
-            webview.create_window(APP_NAME, url, width=1000, height=680,
-                                  min_size=(420, 560), resizable=True)
+            api = QuitApi()
+            api.window = webview.create_window(
+                APP_NAME, url, width=1000, height=680,
+                min_size=(420, 560), resizable=True, js_api=api,
+            )
             webview.start(private_mode=False, storage_path=storage_path())
             return
         except Exception as e:

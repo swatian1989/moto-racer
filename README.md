@@ -85,6 +85,7 @@ milestones.
 | Pause | ⏸ | `P` / `Esc` | Start |
 | Fullscreen | ⛶ | `F` | — |
 | Mute | 🔊 | `M` | — |
+| Quit | EXIT button | `Q` | — |
 
 ## Settings
 
@@ -119,6 +120,8 @@ buildenv\Scripts\python desktop\build_exe.py
 Requires the Microsoft Edge WebView2 runtime, which ships with Windows 11 and
 current Windows 10. Without it the launcher falls back to opening a Chromium
 app window instead.
+
+**EXIT** on the title or pause screen closes the app (two taps, so a stray press cannot end a run). `Q` does the same when you are not mid-corner. In a plain browser tab a page is not allowed to close itself, so it drops out of fullscreen and tells you to close the tab instead.
 
 Useful flags: `--serve-only` runs the server with no window, `--browser` forces
 the browser fallback, `--port N` moves the port (which starts a fresh save).
