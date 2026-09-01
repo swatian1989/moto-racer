@@ -1,5 +1,5 @@
 """
-Moto Racer - Coastline : desktop launcher.
+Musa Moto Racer - Coastline : desktop launcher.
 
 Serves the game from a local HTTP server and shows it in a native window.
 It has to be HTTP rather than file:// because a service worker (and therefore
@@ -24,7 +24,7 @@ import threading
 import urllib.request
 import webbrowser
 
-APP_NAME = "Moto Racer"
+APP_NAME = "Musa Moto Racer"
 # Chosen to sit in the dynamic/private range and be unlikely to clash.
 # Changing it in a later release would orphan the player's saved progress.
 DEFAULT_PORT = 47821
@@ -74,7 +74,7 @@ def already_ours(port):
         with urllib.request.urlopen(
             "http://127.0.0.1:%d/manifest.json" % port, timeout=1.5
         ) as r:
-            return b"Moto Racer" in r.read(400)
+            return b"Musa Moto Racer" in r.read(400)
     except Exception:
         return False
 

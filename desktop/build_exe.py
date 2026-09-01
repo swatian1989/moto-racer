@@ -1,11 +1,11 @@
 """
-Build MotoRacer.exe - a single-file Windows app that runs the game offline.
+Build MusaMotoRacer.exe - a single-file Windows app that runs the game offline.
 
     python -m venv buildenv
     buildenv\\Scripts\\pip install pyinstaller pywebview
     buildenv\\Scripts\\python desktop\\build_exe.py
 
-The exe lands in dist/MotoRacer.exe and needs nothing installed to run,
+The exe lands in dist/MusaMotoRacer.exe and needs nothing installed to run,
 other than the Microsoft Edge WebView2 runtime, which ships with Windows 11
 and current Windows 10.
 """
@@ -69,7 +69,7 @@ def main():
         "--noconfirm", "--clean",
         "--onefile",
         "--noconsole",
-        "--name", "MotoRacer",
+        "--name", "MusaMotoRacer",
         "--icon", icon,
         "--distpath", DIST,
         "--workpath", os.path.join(BUILD, "pyi"),
@@ -87,7 +87,7 @@ def main():
     if r.returncode != 0:
         raise SystemExit(r.returncode)
 
-    exe = os.path.join(DIST, "MotoRacer.exe")
+    exe = os.path.join(DIST, "MusaMotoRacer.exe")
     sign(exe)
     print("\nbuilt: %s  (%.1f MB)" % (exe, os.path.getsize(exe) / 1048576.0))
 

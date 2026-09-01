@@ -1,4 +1,4 @@
-# Moto Racer — Coastline
+# Musa Moto Racer — Coastline
 
 A 3D sunset-highway racing game that runs in the browser and **installs like a
 native app** on Android, iPhone, Windows, Mac and Linux. Once installed it works
@@ -103,7 +103,7 @@ top-10 leaderboard are all stored on your device.
 
 ## Desktop app (Windows .exe)
 
-`MotoRacer.exe` is a single self-contained file. Double-click it and the game
+`MusaMotoRacer.exe` is a single self-contained file. Double-click it and the game
 opens in its own window - no browser, no install, no internet.
 
 It works by serving the game from a local web server on a fixed port and
@@ -119,7 +119,7 @@ To build it yourself:
 python -m venv buildenv
 buildenv\Scripts\pip install pyinstaller pywebview pillow
 buildenv\Scripts\python desktop\build_exe.py
-# -> dist/MotoRacer.exe
+# -> dist/MusaMotoRacer.exe
 ```
 
 Requires the Microsoft Edge WebView2 runtime, which ships with Windows 11 and
@@ -133,7 +133,7 @@ the browser fallback, `--port N` moves the port (which starts a fresh save).
 
 ## Android app (APK)
 
-`MotoRacer.apk` is a signed release build that bundles the whole game -
+`MusaMotoRacer.apk` is a signed release build that bundles the whole game -
 including the 3D engine - inside the package. Nothing is fetched at runtime, so
 it works offline from the moment it installs.
 
@@ -148,7 +148,8 @@ npm install
 npx cap add android          # regenerates the native project
 python make_android_assets.py   # launcher icons + splash from the game art
 cd .. && python mobile/build_apk.py
-# -> mobile/dist/MotoRacer.apk
+# -> mobile/dist/MusaMotoRacer.apk
+python mobile/build_apk.py --aab   # .aab for Google Play
 ```
 
 Needs **Node**, **JDK 21** (Capacitor 8 will not build on 17) and the Android

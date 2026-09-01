@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>MOTO RACER — COASTLINE</title>
+<title>MUSA MOTO RACER — COASTLINE</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1a1230">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Moto Racer">
+<meta name="apple-mobile-web-app-title" content="Musa Moto Racer">
 <link rel="icon" href="icons/favicon-32.png" sizes="32x32">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -41,6 +41,7 @@ canvas{display:block;width:100%;height:100%}
 #bnos{width:62px;height:62px;font-size:14px;border-color:#19e6d6bb;background:rgba(0,255,200,.24)}
 #bjump{width:70px;height:70px;font-size:14px;border-color:#ffd23abb;background:rgba(255,180,0,.26)}
 .screen{position:fixed;inset:0;background:linear-gradient(180deg,rgba(20,12,40,.85),rgba(60,24,30,.85));display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:40;text-align:center;padding:20px}
+.brand{font-size:min(5.5vw,24px);font-weight:800;letter-spacing:10px;color:#ff8a4a;text-shadow:0 0 18px #ff6a0099;margin-bottom:2px}
 .screen h1{font-size:min(13vw,80px);font-weight:900;color:#ffd23a;text-shadow:0 0 30px #ff6a00;letter-spacing:2px;line-height:1}
 .screen h2{font-size:min(6vw,34px);font-weight:800;color:#fff;letter-spacing:6px;margin-top:4px}
 .screen p{color:#ffe6cf;margin-top:18px;font-size:min(4vw,16px);letter-spacing:1px}
@@ -84,7 +85,7 @@ body.no-touch #pad{display:none}
 #toast button{margin-left:10px;padding:5px 12px;font-size:11px;font-weight:800;letter-spacing:1px;color:#1a1230;background:#ffd23a;border:none;border-radius:20px;cursor:pointer}
 
 /* ---------- menus: garage / upgrades / settings ---------- */
-.menurow{margin-top:20px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.menurow{margin-top:20px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;width:100%;max-width:380px}
 .menubtn{padding:10px 16px;font-size:12px;font-weight:800;letter-spacing:1.5px;color:#ffe6cf;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.28);border-radius:30px;cursor:pointer}
 .menubtn:active{transform:scale(.95);background:rgba(255,255,255,.18)}
 .wallet{margin-top:10px;font-size:15px;font-weight:900;letter-spacing:2px;color:#ffd23a;text-shadow:0 0 14px #ff6a0066}
@@ -199,6 +200,7 @@ input[type=range]{width:120px;accent-color:#ffd23a}
 </div>
 
 <div class="screen" id="start">
+  <div class="brand">MUSA</div>
   <h1>MOTO RACER</h1>
   <h2>COASTLINE</h2>
   <p id="ctrlLine">TILT or ◀▶ to steer · GAS · NOS · JUMP</p>

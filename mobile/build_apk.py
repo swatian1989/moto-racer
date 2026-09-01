@@ -1,5 +1,5 @@
 """
-Build a signed release APK of Moto Racer.
+Build a signed release APK of Musa Moto Racer.
 
     python mobile/build_apk.py
 
@@ -10,6 +10,7 @@ update over an existing copy, so keep a backup of it somewhere safe.
 Set JAVA_HOME / ANDROID_HOME to override the defaults below.
 """
 
+import argparse
 import glob
 import os
 import shutil
@@ -72,6 +73,12 @@ def run(cmd, cwd=None, env=None):
 
 
 def main():
+    ap = argparse.ArgumentParser(description="Build Musa Moto Racer for Android")
+    ap.add_argument("--aab", action="store_true",
+                    help="build an Android App Bundle for Google Play instead "
+                         "of an APK for sideloading")
+    args = ap.parse_args()
+
     jdk, sdk = find_jdk(), find_sdk()
     bt = build_tools(sdk)
     node = find_node()
@@ -98,6 +105,32 @@ def main():
     node_exe = os.path.join(node, "node.exe") if node else "node"
     run([node_exe, os.path.join(HERE, "sync-www.js")], cwd=HERE, env=env)
     run([npx, "cap", "sync", "android"], cwd=HERE, env=env)
+
+    props = read_props(os.path.join(KEYDIR, "keystore.properties"))
+    os.makedirs(OUT, exist_ok=True)
+
+    if args.aab:
+        # Google Play only accepts App Bundles for new apps. An .aab is a jar,
+        # so it is signed with jarsigner - apksigner does not handle them.
+        run([os.path.join(ANDROID, "gradlew.bat"), "bundleRelease"], cwd=ANDROID, env=env)
+        src = os.path.join(ANDROID, "app", "build", "outputs", "bundle", "release",
+                           "app-release.aab")
+        if not os.path.exists(src):
+            raise SystemExit("gradle produced no release bundle")
+        final = os.path.join(OUT, "MusaMotoRacer.aab")
+        shutil.copy2(src, final)
+        run([os.path.join(jdk, "bin", "jarsigner.exe"),
+             "-keystore", os.path.join(KEYDIR, props["storeFile"]),
+             "-storepass", props["storePassword"],
+             "-keypass", props["keyPassword"],
+             "-sigalg", "SHA256withRSA", "-digestalg", "SHA-256",
+             final, props["keyAlias"]], env=env)
+        run([os.path.join(jdk, "bin", "jarsigner.exe"), "-verify",
+             "-keystore", os.path.join(KEYDIR, props["storeFile"]), final], env=env)
+        print("\nbuilt: %s  (%.1f MB)" % (final, os.path.getsize(final) / 1048576.0))
+        print("Upload this to the Google Play Console.")
+        return
+
     run([os.path.join(ANDROID, "gradlew.bat"), "assembleRelease"], cwd=ANDROID, env=env)
 
     unsigned = os.path.join(ANDROID, "app", "build", "outputs", "apk", "release",
@@ -109,13 +142,11 @@ def main():
             raise SystemExit("gradle produced no release apk")
         unsigned = hits[0]
 
-    os.makedirs(OUT, exist_ok=True)
-    aligned = os.path.join(OUT, "MotoRacer-aligned.apk")
-    final = os.path.join(OUT, "MotoRacer.apk")
+    aligned = os.path.join(OUT, "MusaMotoRacer-aligned.apk")
+    final = os.path.join(OUT, "MusaMotoRacer.apk")
 
     run([os.path.join(bt, "zipalign.exe"), "-f", "-p", "4", unsigned, aligned], env=env)
 
-    props = read_props(os.path.join(KEYDIR, "keystore.properties"))
     run([os.path.join(bt, "apksigner.bat"), "sign",
          "--ks", os.path.join(KEYDIR, props["storeFile"]),
          "--ks-key-alias", props["keyAlias"],
