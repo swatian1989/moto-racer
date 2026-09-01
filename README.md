@@ -112,7 +112,7 @@ To build it yourself:
 ```sh
 python -m venv buildenv
 buildenv\Scripts\pip install pyinstaller pywebview pillow
-buildenv\Scripts\python desktopuild_exe.py
+buildenv\Scripts\python desktop\build_exe.py
 # -> dist/MotoRacer.exe
 ```
 
