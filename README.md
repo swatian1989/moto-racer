@@ -6,8 +6,6 @@ with no internet connection at all.
 
 **Play it:** https://swatian1989.github.io/moto-racer/
 
-![Moto Racer](icons/icon-192.png)
-
 ## Install it
 
 | Device | How |
@@ -20,29 +18,76 @@ After installing, launch it from your home screen, Start menu, Dock or app
 drawer. It opens fullscreen with no browser chrome, and **works offline** — the
 whole game, including the 3D engine, is stored on the device.
 
+## The ride
+
+Dodge traffic, thread the gaps, and get as far as you can before you wipe out.
+
+- **Near misses build a combo.** Slip past a car in the next lane and the combo
+  climbs, multiplying everything you score — up to 2× on its own. Stop
+  threading traffic and it decays.
+- **Power-ups** drop on the road: 🛡 **Shield** eats one crash,
+  🧲 **Magnet** pulls coins to your line, **2× Score** doubles
+  everything for ten seconds, and **Slow-Mo** drags the world down to a crawl
+  while you keep steering at full speed.
+- **Day turns to night** as the run goes on. Stars come out, your headlight
+  starts doing real work, and oncoming traffic becomes a pair of lights in the
+  dark before it becomes a car.
+- **Traffic changes lanes** ahead of you — but only while it is still far
+  off, so it never swerves into you unfairly.
+- **Weather** rolls between clear, rain and storm, with lightning and a wet,
+  reflective road.
+
+## Progression
+
+Coins are earned from pickups, distance covered and near misses, then spent in
+the menus on the title screen.
+
+**Garage — four bikes**
+
+| Bike | Cost | Character |
+| --- | --- | --- |
+| Street 500 | free | Balanced starter machine |
+| Neon GT | 1,200 | Fast and twitchy, rewards a clean line |
+| Dune ADV | 3,000 | Flicks between lanes, deep nitro tank |
+| Phantom S | 6,500 | The endgame superbike |
+
+**Upgrades** — three tracks, four levels each: **Engine** (top speed),
+**Nitro** (tank size and refill rate) and **Grip** (how fast you change lanes).
+
+**Missions** — three objectives are always active on the title screen. Clear
+one for a coin payout and a fresh objective takes its place.
+
+**Achievements** unlock as you hit distance, coin, near-miss and garage
+milestones.
+
 ## Controls
 
-| | Touch | Keyboard |
-| --- | --- | --- |
-| Steer | ◀ ▶ buttons, or tilt the phone | `←` `→` or `A` `D` |
-| Throttle | 🔥 GAS | `↑` or `W` |
-| Nitro | ⚡ NOS | `N` or `Shift` |
-| Jump | JUMP | `Space` |
-| Pause | ⏸ | `P` or `Esc` |
-| Fullscreen | ⛶ | `F` |
-| Mute | 🔊 | `M` |
+| | Touch | Keyboard | Gamepad |
+| --- | --- | --- | --- |
+| Steer | ◀ ▶ buttons, or tilt the phone | `←` `→` / `A` `D` | Left stick or D-pad |
+| Throttle | 🔥 GAS | `↑` / `W` | Right trigger or B |
+| Nitro | ⚡ NOS | `N` / `Shift` | X, left trigger, bumpers |
+| Jump | JUMP | `Space` | A |
+| Pause | ⏸ | `P` / `Esc` | Start |
+| Fullscreen | ⛶ | `F` | — |
+| Mute | 🔊 | `M` | — |
 
-Dodge traffic, grab coins, and ride as far as you can. Weather shifts between
-clear, rain and storm as the run goes on. Your best distance and the top-10
-leaderboard are stored on your device.
+## Settings
+
+Graphics preset (low / medium / high), tilt steering with an adjustable
+sensitivity, vibration, an optional FPS readout, and a progress reset. The game
+also drops its own resolution automatically if a device cannot hold frame rate.
+
+Your coins, bikes, upgrades, missions, achievements, best distance and the
+top-10 leaderboard are all stored on your device.
 
 ## How it's built
 
-Single-page WebGL game on [three.js](https://threejs.org/) r128 — no build step,
-no dependencies to install.
+Single-page WebGL game on [three.js](https://threejs.org/) r128 — no build
+step, no dependencies to install.
 
 ```
-index.html                 the whole game: scene, physics, HUD, audio
+index.html                 the whole game: scene, physics, progression, HUD, audio
 vendor/three.min.js        three.js, vendored so the app runs offline
 manifest.json              PWA metadata that makes it installable
 sw.js                      service worker: precaches everything for offline play

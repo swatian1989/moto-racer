@@ -75,6 +75,76 @@ body.no-touch #pad{display:none}
 #toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:50;max-width:88vw;padding:11px 18px;border-radius:30px;background:rgba(8,10,22,.92);border:1px solid rgba(255,255,255,.22);color:#ffe6cf;font-size:12px;letter-spacing:1px;text-align:center;opacity:0;pointer-events:none;transition:opacity .25s}
 #toast.show{opacity:1;pointer-events:auto}
 #toast button{margin-left:10px;padding:5px 12px;font-size:11px;font-weight:800;letter-spacing:1px;color:#1a1230;background:#ffd23a;border:none;border-radius:20px;cursor:pointer}
+
+/* ---------- menus: garage / upgrades / settings ---------- */
+.menurow{margin-top:20px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.menubtn{padding:10px 16px;font-size:12px;font-weight:800;letter-spacing:1.5px;color:#ffe6cf;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.28);border-radius:30px;cursor:pointer}
+.menubtn:active{transform:scale(.95);background:rgba(255,255,255,.18)}
+.wallet{margin-top:10px;font-size:15px;font-weight:900;letter-spacing:2px;color:#ffd23a;text-shadow:0 0 14px #ff6a0066}
+.wallet small{font-size:10px;letter-spacing:2px;color:#d0a890;font-weight:700}
+.panel{position:fixed;inset:0;z-index:45;background:linear-gradient(180deg,#120a20,#2b1119);display:flex;flex-direction:column;align-items:center;padding:calc(16px + env(safe-area-inset-top)) 14px calc(16px + env(safe-area-inset-bottom));overflow-y:auto;touch-action:pan-y}
+.panel h2{font-size:min(7vw,30px);font-weight:900;color:#ffd23a;letter-spacing:5px;margin-bottom:2px;flex-shrink:0}
+.cardlist{width:100%;max-width:460px;display:flex;flex-direction:column;gap:10px;margin:14px 0}
+.card{background:rgba(0,0,0,.34);border:1px solid rgba(255,255,255,.16);border-radius:16px;padding:13px 14px;text-align:left}
+.card.sel{border-color:#ffd23a;background:rgba(255,210,58,.09);box-shadow:0 0 22px #ff6a0033}
+.card.locked{opacity:.62}
+.card-top{display:flex;align-items:center;gap:8px}
+.dot{width:13px;height:13px;border-radius:50%;flex-shrink:0;border:1px solid rgba(255,255,255,.5)}
+.card-name{font-size:14px;font-weight:900;letter-spacing:2px;color:#fff;flex:1}
+.card-tag{font-size:10px;font-weight:800;letter-spacing:1px;padding:3px 9px;border-radius:20px}
+.tag-own{background:rgba(25,230,214,.18);color:#19e6d6;border:1px solid #19e6d688}
+.tag-sel{background:rgba(255,210,58,.2);color:#ffd23a;border:1px solid #ffd23a88}
+.tag-cost{background:rgba(255,255,255,.1);color:#ffe6cf;border:1px solid rgba(255,255,255,.3)}
+.card-blurb{margin-top:5px;font-size:11px;color:#c8a894;letter-spacing:.5px;line-height:1.5}
+.stats{margin-top:9px;display:grid;grid-template-columns:1fr 1fr;gap:5px 12px}
+.stat{display:flex;align-items:center;gap:7px}
+.stat span{font-size:9px;letter-spacing:1.5px;color:#d0a890;width:38px;flex-shrink:0}
+.bar{flex:1;height:5px;border-radius:3px;background:rgba(255,255,255,.13);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,#ff6a00,#ffd23a)}
+.cardbtn{margin-top:11px;width:100%;padding:10px;font-size:12px;font-weight:800;letter-spacing:2px;color:#1a1230;background:#ffd23a;border:none;border-radius:11px;cursor:pointer}
+.cardbtn.ghost{background:transparent;color:#ffd23a;border:1px solid #ffd23a88}
+.cardbtn:disabled{background:rgba(255,255,255,.12);color:#8a7a70;cursor:not-allowed}
+/* upgrade level pips */
+.pips{display:flex;gap:4px;margin-top:8px}
+.pip{flex:1;height:7px;border-radius:3px;background:rgba(255,255,255,.13)}
+.pip.on{background:linear-gradient(90deg,#ff6a00,#ffd23a)}
+/* settings rows */
+.setrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 2px;border-bottom:1px solid rgba(255,255,255,.1)}
+.setrow label{font-size:12px;font-weight:700;letter-spacing:1.5px;color:#ffe6cf}
+.setrow .hint{display:block;font-size:10px;color:#a89080;letter-spacing:.5px;margin-top:3px;font-weight:400}
+.seg{display:flex;gap:4px}
+.seg button{padding:7px 12px;font-size:10px;font-weight:800;letter-spacing:1px;color:#ffe6cf;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.22);border-radius:9px;cursor:pointer}
+.seg button.on{background:#ffd23a;color:#1a1230;border-color:#ffd23a}
+.switch{width:50px;height:28px;border-radius:20px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);position:relative;cursor:pointer;flex-shrink:0}
+.switch i{position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:#c8b8b0;transition:left .15s,background .15s}
+.switch.on{background:rgba(255,210,58,.32);border-color:#ffd23a}
+.switch.on i{left:24px;background:#ffd23a}
+input[type=range]{width:120px;accent-color:#ffd23a}
+/* ---------- in-run HUD additions ---------- */
+#coins{font-size:12px;color:#ffd23a;letter-spacing:1px;margin-top:3px;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+#combo{position:fixed;top:calc(112px + env(safe-area-inset-top));left:50%;transform:translateX(-50%) scale(.8);z-index:12;font-size:22px;font-weight:900;letter-spacing:2px;color:#ffd23a;text-shadow:0 0 18px #ff6a00,0 2px 6px rgba(0,0,0,.6);opacity:0;transition:opacity .18s,transform .18s;pointer-events:none;white-space:nowrap}
+#combo.show{opacity:1;transform:translateX(-50%) scale(1)}
+#buffs{position:fixed;left:16px;bottom:calc(150px + env(safe-area-inset-bottom));z-index:12;display:flex;flex-direction:column;gap:5px;pointer-events:none}
+.buff{display:flex;align-items:center;gap:6px;padding:4px 9px;border-radius:20px;background:rgba(8,10,22,.55);border:1px solid rgba(255,255,255,.28);font-size:10px;font-weight:800;letter-spacing:1px;color:#fff;backdrop-filter:blur(4px)}
+.buff b{width:34px;height:3px;border-radius:2px;background:rgba(255,255,255,.3);overflow:hidden;display:block}
+.buff b i{display:block;height:100%;background:#fff}
+/* ---------- run summary on the wipeout screen ---------- */
+#summary{margin-top:12px;display:grid;grid-template-columns:repeat(3,auto);gap:6px 18px;justify-content:center}
+#summary div{text-align:center}
+#summary .k{font-size:9px;letter-spacing:1.5px;color:#c8a894}
+#summary .v{font-size:16px;font-weight:900;color:#ffe6cf;margin-top:1px}
+#earned{margin-top:12px;font-size:13px;font-weight:800;letter-spacing:1.5px;color:#ffd23a}
+/* ---------- missions ---------- */
+#missionBox{margin-top:16px;width:100%;max-width:330px;display:flex;flex-direction:column;gap:6px}
+.msn{display:flex;align-items:center;gap:8px;padding:7px 11px;border-radius:11px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.14);text-align:left}
+.msn.done{border-color:#19e6d688;background:rgba(25,230,214,.12)}
+.msn-t{flex:1;font-size:10px;letter-spacing:.5px;color:#ffe6cf;line-height:1.4}
+.msn-r{font-size:10px;font-weight:800;color:#ffd23a;letter-spacing:1px;white-space:nowrap}
+.msn-p{width:100%;height:3px;border-radius:2px;background:rgba(255,255,255,.14);margin-top:4px;overflow:hidden}
+.msn-p i{display:block;height:100%;background:linear-gradient(90deg,#ff6a00,#ffd23a)}
+/* achievement popup */
+#ach{position:fixed;top:calc(70px + env(safe-area-inset-top));left:50%;transform:translateX(-50%) translateY(-14px);z-index:52;padding:10px 18px;border-radius:14px;background:rgba(8,10,22,.94);border:1px solid #ffd23a88;color:#ffd23a;font-size:11px;font-weight:800;letter-spacing:1.5px;text-align:center;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;white-space:nowrap}
+#ach.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
 </head>
 <body>
@@ -87,6 +157,7 @@ body.no-touch #pad{display:none}
       <div id="dist">0 m</div>
       <div id="best">BEST 0 m</div>
       <div id="score">SCORE 0</div>
+      <div id="coins">◎ 0</div>
     </div>
     <div id="sp-wrap">
       <div id="speed">0</div>
@@ -96,6 +167,8 @@ body.no-touch #pad{display:none}
   </div>
 </div>
 <div class="weather-tag hidden" id="wtag">☀ CLEAR</div>
+<div id="combo"></div>
+<div id="buffs"></div>
 
 <div id="nitro-box" class="hidden">
   <div id="nitro-lbl">NITRO</div>
@@ -130,6 +203,13 @@ body.no-touch #pad{display:none}
     <b>←</b> <b>→</b> steer · <b>↑</b> gas · <b>Space</b> jump · <b>N</b> nitro<br>
     <b>P</b> pause · <b>F</b> fullscreen · <b>M</b> mute
   </div>
+  <div class="wallet">◎ <span class="walletVal">0</span> <small>COINS</small></div>
+  <div class="menurow">
+    <button class="menubtn" id="garageBtn">GARAGE</button>
+    <button class="menubtn" id="shopBtn">UPGRADES</button>
+    <button class="menubtn" id="setBtn">SETTINGS</button>
+  </div>
+  <div id="missionBox"></div>
 </div>
 
 <div class="screen hidden" id="paused">
@@ -142,6 +222,12 @@ body.no-touch #pad{display:none}
 <div class="screen hidden" id="over">
   <h1 style="color:#ff4a1a">WIPEOUT</h1>
   <div class="stat-big" id="finalStat">0 m · SCORE 0</div>
+  <div id="summary">
+    <div><div class="k">COINS</div><div class="v" id="sumCoins">0</div></div>
+    <div><div class="k">NEAR MISS</div><div class="v" id="sumNear">0</div></div>
+    <div><div class="k">TOP KM/H</div><div class="v" id="sumSpeed">0</div></div>
+  </div>
+  <div id="earned"></div>
   <div id="nameRow">
     <input id="nameIn" maxlength="10" placeholder="RIDER" autocomplete="off"
            autocapitalize="characters" spellcheck="false" aria-label="Name for the leaderboard">
@@ -151,6 +237,57 @@ body.no-touch #pad{display:none}
   <button class="bigbtn" id="retryBtn">RIDE AGAIN</button>
 </div>
 
+<div class="panel hidden" id="garage">
+  <h2>GARAGE</h2>
+  <div class="wallet">◎ <span class="walletVal">0</span> <small>COINS</small></div>
+  <div class="cardlist" id="bikeList"></div>
+  <button class="bigbtn panel-back" data-panel="garage">BACK</button>
+</div>
+
+<div class="panel hidden" id="shop">
+  <h2>UPGRADES</h2>
+  <div class="wallet">◎ <span class="walletVal">0</span> <small>COINS</small></div>
+  <div class="cardlist" id="upgList"></div>
+  <button class="bigbtn panel-back" data-panel="shop">BACK</button>
+</div>
+
+<div class="panel hidden" id="settings">
+  <h2>SETTINGS</h2>
+  <div class="cardlist">
+    <div class="card">
+      <div class="setrow">
+        <label>GRAPHICS<span class="hint">Lower this if the game stutters</span></label>
+        <div class="seg" id="segQuality">
+          <button data-q="low">LOW</button><button data-q="med">MED</button><button data-q="high">HIGH</button>
+        </div>
+      </div>
+      <div class="setrow">
+        <label>TILT STEERING<span class="hint">Steer by tilting the phone</span></label>
+        <div class="switch" id="swTilt"><i></i></div>
+      </div>
+      <div class="setrow">
+        <label>TILT SENSITIVITY</label>
+        <input type="range" id="rngSens" min="10" max="40" step="1">
+      </div>
+      <div class="setrow">
+        <label>VIBRATION<span class="hint">Buzz on crashes and pickups</span></label>
+        <div class="switch" id="swHaptics"><i></i></div>
+      </div>
+      <div class="setrow">
+        <label>SHOW FPS</label>
+        <div class="switch" id="swFps"><i></i></div>
+      </div>
+      <div class="setrow" style="border:0">
+        <label>RESET PROGRESS<span class="hint">Clears coins, bikes and scores</span></label>
+        <button class="cardbtn ghost" id="resetBtn" style="width:auto;margin:0;padding:9px 16px">RESET</button>
+      </div>
+    </div>
+  </div>
+  <button class="bigbtn panel-back" data-panel="settings">BACK</button>
+</div>
+
+<div id="fps" class="hidden" style="position:fixed;top:calc(6px + env(safe-area-inset-top));left:8px;z-index:31;font:700 10px monospace;color:#19e6d6;text-shadow:0 1px 3px #000"></div>
+<div id="ach"></div>
 <div id="toast"></div>
 
 <script>
@@ -210,7 +347,8 @@ scene.add(sky);
 const starGeo=new THREE.BufferGeometry();const sp=[];
 for(let i=0;i<160;i++){const a=Math.random()*Math.PI*2;const r=200+Math.random()*60;sp.push(Math.cos(a)*r,80+Math.random()*120,Math.sin(a)*r-80);}
 starGeo.setAttribute('position',new THREE.Float32BufferAttribute(sp,3));
-scene.add(new THREE.Points(starGeo,new THREE.PointsMaterial({color:0xffffff,size:0.7,transparent:true,opacity:0.4,fog:false})));
+const starMat=new THREE.PointsMaterial({color:0xffffff,size:0.7,transparent:true,opacity:0.4,fog:false});
+scene.add(new THREE.Points(starGeo,starMat));
 
 // ---------- SUN ----------
 const SUN_POS=new THREE.Vector3(34,16,-210);
@@ -377,6 +515,86 @@ const coinGeo=new THREE.TorusGeometry(0.45,0.16,10,20);
 const coinMat=new THREE.MeshStandardMaterial({color:0xffc01a,metalness:0.9,roughness:0.2,emissive:0xaa7000,emissiveIntensity:0.7});
 for(let i=0;i<COINPOOL;i++){const m=new THREE.Mesh(coinGeo,coinMat);m.visible=false;scene.add(m);const light=new THREE.PointLight(0xffc01a,0,6);m.add(light);coins.push({mesh:m,active:false,lane:0,light:light});}
 
+// ---------- POWER-UPS ----------
+const POWERS=[
+  {id:'shield',color:0x19e6d6,label:'SHIELD',   dur:0},
+  {id:'magnet',color:0xff2d6b,label:'MAGNET',   dur:480},
+  {id:'double',color:0xffd23a,label:'2\u00d7 SCORE',dur:600},
+  {id:'slow',  color:0x8ab4ff,label:'SLOW-MO',  dur:360}
+];
+const powers=[];
+for(let i=0;i<3;i++){
+  const g=new THREE.Group();
+  const core=new THREE.Mesh(new THREE.OctahedronGeometry(0.52,0),
+    new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xffffff,emissiveIntensity:1.2,metalness:0.5,roughness:0.2}));
+  const rg=new THREE.TorusGeometry(0.85,0.07,8,20);rg.rotateX(Math.PI/2);
+  const ring=new THREE.Mesh(rg,new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.75,depthWrite:false}));
+  const light=new THREE.PointLight(0xffffff,0,9);
+  g.add(core,ring,light);g.visible=false;scene.add(g);
+  powers.push({group:g,core:core,ring:ring,light:light,active:false,type:null});
+}
+// bubble that shows the shield is up
+const shieldMesh=new THREE.Mesh(new THREE.SphereGeometry(1.9,20,16),
+  new THREE.MeshBasicMaterial({color:0x19e6d6,transparent:true,opacity:0.2,depthWrite:false,side:THREE.DoubleSide}));
+shieldMesh.position.y=1.3;shieldMesh.visible=false;bike.add(shieldMesh);
+
+function spawnPower(){
+  const slot=powers.find(x=>!x.active);if(!slot)return;
+  const t=POWERS[Math.floor(Math.random()*POWERS.length)];
+  slot.active=true;slot.type=t;
+  slot.core.material.color.setHex(t.color);
+  slot.core.material.emissive.setHex(t.color);
+  slot.ring.material.color.setHex(t.color);
+  slot.light.color.setHex(t.color);slot.light.intensity=1.6;
+  slot.group.visible=true;
+  slot.group.position.set(LANES[Math.floor(Math.random()*3)],1.5,FAR);
+}
+function grabPower(t){
+  G.run.power++;
+  if(t.id==='shield')G.buffs.shield=1;else G.buffs[t.id]=t.dur;
+  beep(1120,0.2,'square',0.07);buzz(25);
+  showAch(t.label+' ACTIVE');
+  renderBuffs();
+}
+function renderBuffs(){
+  const box=document.getElementById('buffs');
+  let html='';
+  if(G.buffs.shield>0)html+='<div class="buff">\u{1F6E1} SHIELD</div>';
+  POWERS.forEach(t=>{
+    if(t.dur&&G.buffs[t.id]>0){
+      const pct=Math.round(G.buffs[t.id]/t.dur*100);
+      html+='<div class="buff">'+t.label+' <b><i style="width:'+pct+'%"></i></b></div>';
+    }
+  });
+  box.innerHTML=html;
+}
+
+// ---------- TIME OF DAY ----------
+const TOD=[
+  {t:0.00,fog:0xf2a572,hemi:0.75,sun:1.35,sky:0xffffff,star:0.14,head:1.0},
+  {t:0.28,fog:0x161636,hemi:0.24,sun:0.18,sky:0x44528f,star:1.00,head:2.5},
+  {t:0.52,fog:0x3a3a6a,hemi:0.38,sun:0.48,sky:0x7788bb,star:0.60,head:1.9},
+  {t:0.78,fog:0xffc9a0,hemi:0.85,sun:1.30,sky:0xffe0c0,star:0.08,head:1.0},
+  {t:1.00,fog:0xf2a572,hemi:0.75,sun:1.35,sky:0xffffff,star:0.14,head:1.0}
+];
+const todA=new THREE.Color(),todB=new THREE.Color();
+function applyTOD(){
+  const t=G.tod;
+  let a=TOD[0],b=TOD[1];
+  for(let i=0;i<TOD.length-1;i++){if(t>=TOD[i].t&&t<=TOD[i+1].t){a=TOD[i];b=TOD[i+1];break;}}
+  const k=(t-a.t)/Math.max(1e-6,b.t-a.t);
+  scene.fog.color.copy(todA.setHex(a.fog)).lerp(todB.setHex(b.fog),k);
+  skyMat.color.copy(todA.setHex(a.sky)).lerp(todB.setHex(b.sky),k);
+  G.todHemi=a.hemi+(b.hemi-a.hemi)*k;
+  sun.intensity=a.sun+(b.sun-a.sun)*k;
+  const star=a.star+(b.star-a.star)*k;
+  starMat.opacity=star;
+  headSpot.intensity=a.head+(b.head-a.head)*k;
+  headlight.material.emissiveIntensity=1.0+star*1.6;
+  sunDisk.visible=star<0.55;
+  glowSprite.material.opacity=Math.max(0,1-star*1.35);
+}
+
 // ---------- COASTAL SCENERY ----------
 function makePalm(){
   const g=new THREE.Group();
@@ -446,9 +664,288 @@ for(let i=0;i<4;i++){const gl=makeGull();gl.position.set(20+Math.random()*60,30+
 // ---------- GAME STATE ----------
 function readNum(k){try{return +localStorage.getItem(k)||0;}catch(e){return 0;}}
 function readFlag(k){try{return localStorage.getItem(k)==='1';}catch(e){return false;}}
-const G={state:'idle',paused:false,muted:readFlag('motoCoast_muted'),dist:0,score:0,best:readNum('motoCoast_best'),speed:0,maxSpeed:0.9,throttle:0,nitro:100,nitroOn:false,
+const G={state:'idle',paused:false,muted:readFlag('motoCoast_muted'),dist:0,score:0,scoreF:0,best:readNum('motoCoast_best'),speed:0,maxSpeed:0.9,throttle:0,nitro:100,nitroMax:100,nitroOn:false,
 laneIndex:1,targetX:0,bikeX:0,bikeY:0,bikeVY:0,jumping:false,lean:0,wheelSpin:0,shake:0,fov:BASE_FOV,
-spawnTimer:0,coinTimer:0,weather:'clear',weatherT:0,weatherNext:900,lightning:0};
+spawnTimer:0,coinTimer:0,powerTimer:0,weather:'clear',weatherT:0,weatherNext:900,lightning:0,
+combo:0,comboT:0,invuln:0,tod:0,
+buffs:{shield:0,magnet:0,double:0,slow:0},
+run:{coins:0,near:0,power:0,nitroT:0,topSpeed:0,maxCombo:0}};
+
+// ---------- PROGRESSION: WALLET, BIKES, UPGRADES ----------
+function readJSON(k,fb){try{const v=localStorage.getItem(k);return v?JSON.parse(v):fb;}catch(e){return fb;}}
+function writeJSON(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+
+const BIKES=[
+  {id:'street', name:'STREET 500', cost:0,    color:0xe01500, top:1.00, accel:1.00, grip:1.00, nitro:1.00, blurb:'Balanced starter machine. Forgiving everywhere.'},
+  {id:'neon',   name:'NEON GT',    cost:1200, color:0x00d0ff, top:1.12, accel:1.10, grip:0.92, nitro:1.00, blurb:'Fast and twitchy. Rewards a clean line.'},
+  {id:'dune',   name:'DUNE ADV',   cost:3000, color:0xff8a00, top:1.05, accel:1.04, grip:1.28, nitro:1.18, blurb:'Flicks between lanes and holds a deep nitro tank.'},
+  {id:'phantom',name:'PHANTOM S',  cost:6500, color:0x9b5cff, top:1.24, accel:1.18, grip:1.12, nitro:1.22, blurb:'The endgame superbike. Nothing keeps up.'}
+];
+const UPGRADES=[
+  {id:'engine', name:'ENGINE', blurb:'+6% top speed per level'},
+  {id:'nitro',  name:'NITRO',  blurb:'Bigger tank, faster refill'},
+  {id:'grip',   name:'GRIP',   blurb:'Snappier lane changes'}
+];
+const UPG_COST=[400,900,1800,3200];
+const UPG_MAX=UPG_COST.length;
+
+const MISSIONS=[
+  {id:'dist1200', text:'Ride 1200 m in a single run',   goal:1200, kind:'dist',     reward:200},
+  {id:'dist3000', text:'Ride 3000 m in a single run',   goal:3000, kind:'dist',     reward:400},
+  {id:'coins15',  text:'Collect 15 coins in one run',   goal:15,   kind:'coins',    reward:220},
+  {id:'coins30',  text:'Collect 30 coins in one run',   goal:30,   kind:'coins',    reward:380},
+  {id:'near12',   text:'Pull off 12 near misses',       goal:12,   kind:'near',     reward:280},
+  {id:'near30',   text:'Pull off 30 near misses',       goal:30,   kind:'near',     reward:450},
+  {id:'speed200', text:'Hit 200 km/h',                  goal:200,  kind:'topSpeed', reward:200},
+  {id:'speed280', text:'Hit 280 km/h',                  goal:280,  kind:'topSpeed', reward:350},
+  {id:'combo8',   text:'Reach an 8x combo',             goal:8,    kind:'maxCombo', reward:300},
+  {id:'power3',   text:'Grab 3 power-ups in one run',   goal:3,    kind:'power',    reward:260},
+  {id:'nitro15',  text:'Hold nitro for 15 seconds',     goal:900,  kind:'nitroT',   reward:260}
+];
+const ACHS=[
+  {id:'first',    text:'First Ride'},
+  {id:'km1',      text:'1 km in one run'},
+  {id:'km3',      text:'3 km in one run'},
+  {id:'km5',      text:'5 km in one run'},
+  {id:'coin500',  text:'500 coins banked'},
+  {id:'coin5k',   text:'5000 coins banked'},
+  {id:'near100',  text:'100 near misses'},
+  {id:'garage2',  text:'Two bikes in the garage'},
+  {id:'garageAll',text:'Every bike owned'},
+  {id:'maxed',    text:'An upgrade maxed out'},
+  {id:'speed300', text:'300 km/h'}
+];
+
+const DEF_SET={quality:'high',tilt:true,sens:22,haptics:true,fps:false};
+const P={
+  coins:readNum('motoCoast_coins'),
+  owned:readJSON('motoCoast_owned',['street']),
+  bike:(function(){try{return localStorage.getItem('motoCoast_bike')||'street';}catch(e){return 'street';}})(),
+  upg:readJSON('motoCoast_upg',{engine:0,nitro:0,grip:0}),
+  stats:Object.assign({runs:0,bestDist:0,totalCoins:0,totalNear:0,topSpeed:0},readJSON('motoCoast_stats',{})),
+  ach:readJSON('motoCoast_ach',[]),
+  missions:readJSON('motoCoast_missions',null),
+  set:Object.assign({},DEF_SET,readJSON('motoCoast_set',{}))
+};
+if(!Array.isArray(P.owned)||!P.owned.length)P.owned=['street'];
+if(!BIKES.some(b=>b.id===P.bike)||P.owned.indexOf(P.bike)<0)P.bike='street';
+UPGRADES.forEach(u=>{if(typeof P.upg[u.id]!=='number')P.upg[u.id]=0;});
+
+function saveP(){
+  try{localStorage.setItem('motoCoast_coins',String(P.coins));localStorage.setItem('motoCoast_bike',P.bike);}catch(e){}
+  writeJSON('motoCoast_owned',P.owned);writeJSON('motoCoast_upg',P.upg);
+  writeJSON('motoCoast_stats',P.stats);writeJSON('motoCoast_ach',P.ach);
+  writeJSON('motoCoast_missions',P.missions);writeJSON('motoCoast_set',P.set);
+}
+function curBike(){return BIKES.find(b=>b.id===P.bike)||BIKES[0];}
+// One place that turns bike choice + upgrade levels into the numbers the
+// physics actually uses, so tuning never drifts between menu and gameplay.
+function ride(){
+  const b=curBike();
+  return {
+    top:   b.top   * (1 + P.upg.engine * 0.06),
+    accel: b.accel * (1 + P.upg.engine * 0.03),
+    grip:  b.grip  * (1 + P.upg.grip   * 0.10),
+    nitro: b.nitro * (1 + P.upg.nitro  * 0.12),
+    color: b.color
+  };
+}
+function applyBikeLook(){
+  const c=curBike().color;
+  redMat.color.setHex(c);
+  redMat.emissive.setHex(c).multiplyScalar(0.22);
+}
+
+// ---------- MISSIONS ----------
+function rollMissions(){
+  const pool=MISSIONS.slice();
+  const pick=[];
+  while(pick.length<3&&pool.length)pick.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0].id);
+  return pick.map(id=>({id:id,prog:0,done:false}));
+}
+if(!Array.isArray(P.missions)||!P.missions.length)P.missions=rollMissions();
+P.missions=P.missions.filter(m=>MISSIONS.some(d=>d.id===m.id));
+while(P.missions.length<3)P.missions.push(rollMissions()[0]);
+
+function missionDef(id){return MISSIONS.find(m=>m.id===id);}
+function renderMissions(){
+  const box=document.getElementById('missionBox');
+  if(!box)return;
+  box.innerHTML=P.missions.map(m=>{
+    const d=missionDef(m.id);if(!d)return '';
+    const pct=Math.min(100,Math.round(m.prog/d.goal*100));
+    return '<div class="msn'+(m.done?' done':'')+'">'+
+      '<div style="flex:1"><div class="msn-t">'+(m.done?'\u2713 ':'')+d.text+'</div>'+
+      '<div class="msn-p"><i style="width:'+pct+'%"></i></div></div>'+
+      '<div class="msn-r">+'+d.reward+'</div></div>';
+  }).join('');
+}
+// Missions are all "in a single run" goals, so they settle at the end of a run.
+function scoreMissions(){
+  let earned=0;
+  P.missions.forEach((m,i)=>{
+    const d=missionDef(m.id);if(!d||m.done)return;
+    const val=d.kind==='dist'?G.dist:(G.run[d.kind]||0);
+    if(val>m.prog)m.prog=Math.floor(val);
+    if(m.prog>=d.goal){
+      m.done=true;earned+=d.reward;
+      showAch('MISSION COMPLETE  +'+d.reward);
+      // hand out a fresh objective in its place next time the menu is seen
+      setTimeout(()=>{P.missions[i]=rollMissions()[0];saveP();renderMissions();},1200);
+    }
+  });
+  return earned;
+}
+
+// ---------- ACHIEVEMENTS ----------
+let achQueue=[],achBusy=false;
+function showAch(text){
+  achQueue.push(text);
+  if(achBusy)return;
+  (function next(){
+    if(!achQueue.length){achBusy=false;return;}
+    achBusy=true;
+    const el=document.getElementById('ach');
+    el.textContent=achQueue.shift();
+    el.classList.add('show');
+    setTimeout(()=>{el.classList.remove('show');setTimeout(next,350);},2200);
+  })();
+}
+function checkAch(){
+  const st=P.stats,have=id=>P.ach.indexOf(id)>=0;
+  const unlocked=[];
+  const test={
+    first:st.runs>=1, km1:st.bestDist>=1000, km3:st.bestDist>=3000, km5:st.bestDist>=5000,
+    coin500:st.totalCoins>=500, coin5k:st.totalCoins>=5000, near100:st.totalNear>=100,
+    garage2:P.owned.length>=2, garageAll:P.owned.length>=BIKES.length,
+    maxed:UPGRADES.some(u=>P.upg[u.id]>=UPG_MAX), speed300:st.topSpeed>=300
+  };
+  ACHS.forEach(a=>{if(test[a.id]&&!have(a.id)){P.ach.push(a.id);unlocked.push(a.text);}});
+  unlocked.forEach(t=>showAch('\u{1F3C5} '+t));
+  if(unlocked.length)saveP();
+}
+
+// ---------- WALLET + PANELS ----------
+function updateWallet(){
+  const els=document.querySelectorAll('.walletVal');
+  for(let i=0;i<els.length;i++)els[i].textContent=P.coins.toLocaleString();
+}
+function statBar(v){return '<div class="bar"><i style="width:'+Math.max(4,Math.min(100,Math.round((v-0.85)/0.55*100)))+'%"></i></div>';}
+function renderGarage(){
+  const list=document.getElementById('bikeList');
+  list.innerHTML=BIKES.map(b=>{
+    const owned=P.owned.indexOf(b.id)>=0,sel=P.bike===b.id;
+    const tag=sel?'<span class="card-tag tag-sel">RIDING</span>':
+               owned?'<span class="card-tag tag-own">OWNED</span>':
+               '<span class="card-tag tag-cost">\u25ce '+b.cost.toLocaleString()+'</span>';
+    const btn=sel?'<button class="cardbtn" disabled>SELECTED</button>':
+              owned?'<button class="cardbtn" data-sel="'+b.id+'">RIDE THIS</button>':
+              '<button class="cardbtn" data-buy="'+b.id+'"'+(P.coins<b.cost?' disabled':'')+'>'+
+                (P.coins<b.cost?'NEED \u25ce '+(b.cost-P.coins).toLocaleString():'BUY \u25ce '+b.cost.toLocaleString())+'</button>';
+    return '<div class="card'+(sel?' sel':'')+(owned?'':' locked')+'">'+
+      '<div class="card-top"><span class="dot" style="background:#'+b.color.toString(16).padStart(6,'0')+'"></span>'+
+      '<span class="card-name">'+b.name+'</span>'+tag+'</div>'+
+      '<div class="card-blurb">'+b.blurb+'</div>'+
+      '<div class="stats">'+
+        '<div class="stat"><span>TOP</span>'+statBar(b.top)+'</div>'+
+        '<div class="stat"><span>ACCEL</span>'+statBar(b.accel)+'</div>'+
+        '<div class="stat"><span>GRIP</span>'+statBar(b.grip)+'</div>'+
+        '<div class="stat"><span>NITRO</span>'+statBar(b.nitro)+'</div>'+
+      '</div>'+btn+'</div>';
+  }).join('');
+}
+function renderShop(){
+  const list=document.getElementById('upgList');
+  list.innerHTML=UPGRADES.map(u=>{
+    const lvl=P.upg[u.id],max=lvl>=UPG_MAX,cost=max?0:UPG_COST[lvl];
+    const pips=Array.from({length:UPG_MAX},(_,i)=>'<div class="pip'+(i<lvl?' on':'')+'"></div>').join('');
+    const btn=max?'<button class="cardbtn" disabled>FULLY UPGRADED</button>':
+      '<button class="cardbtn" data-upg="'+u.id+'"'+(P.coins<cost?' disabled':'')+'>'+
+      (P.coins<cost?'NEED \u25ce '+(cost-P.coins).toLocaleString():'UPGRADE \u25ce '+cost.toLocaleString())+'</button>';
+    return '<div class="card">'+
+      '<div class="card-top"><span class="card-name">'+u.name+'</span>'+
+      '<span class="card-tag '+(max?'tag-own':'tag-cost')+'">LV '+lvl+' / '+UPG_MAX+'</span></div>'+
+      '<div class="card-blurb">'+u.blurb+'</div>'+
+      '<div class="pips">'+pips+'</div>'+btn+'</div>';
+  }).join('');
+}
+function renderSettings(){
+  const q=P.set.quality;
+  document.querySelectorAll('#segQuality button').forEach(b=>b.classList.toggle('on',b.dataset.q===q));
+  document.getElementById('swTilt').classList.toggle('on',!!P.set.tilt);
+  document.getElementById('swHaptics').classList.toggle('on',!!P.set.haptics);
+  document.getElementById('swFps').classList.toggle('on',!!P.set.fps);
+  document.getElementById('rngSens').value=P.set.sens;
+  document.getElementById('fps').classList.toggle('hidden',!P.set.fps);
+}
+function applyQuality(){
+  const cap={low:0.7,med:1,high:Math.min(window.devicePixelRatio,2)}[P.set.quality]||1;
+  dpr=cap;renderer.setPixelRatio(dpr);renderer.setSize(window.innerWidth,window.innerHeight);
+  if(rain)rain.visible=P.set.quality!=='low'&&G.weather!=='clear';
+  normalEvery=P.set.quality==='low'?6:(P.set.quality==='med'?4:3);
+}
+function openPanel(id){
+  document.getElementById(id).classList.remove('hidden');
+  if(id==='garage')renderGarage();
+  if(id==='shop')renderShop();
+  if(id==='settings')renderSettings();
+  updateWallet();
+}
+function closePanel(id){document.getElementById(id).classList.add('hidden');}
+
+document.getElementById('garageBtn').addEventListener('click',()=>openPanel('garage'));
+document.getElementById('shopBtn').addEventListener('click',()=>openPanel('shop'));
+document.getElementById('setBtn').addEventListener('click',()=>openPanel('settings'));
+document.querySelectorAll('.panel-back').forEach(b=>b.addEventListener('click',()=>closePanel(b.dataset.panel)));
+
+document.getElementById('bikeList').addEventListener('click',e=>{
+  const buy=e.target.dataset&&e.target.dataset.buy,sel=e.target.dataset&&e.target.dataset.sel;
+  if(buy){
+    const b=BIKES.find(x=>x.id===buy);
+    if(!b||P.coins<b.cost)return;
+    P.coins-=b.cost;P.owned.push(b.id);P.bike=b.id;
+    saveP();applyBikeLook();checkAch();renderGarage();updateWallet();
+    beep(920,0.18,'square',0.07);showAch('UNLOCKED  '+b.name);
+  }else if(sel){
+    P.bike=sel;saveP();applyBikeLook();renderGarage();beep(700,0.1,'sine',0.06);
+  }
+});
+document.getElementById('upgList').addEventListener('click',e=>{
+  const id=e.target.dataset&&e.target.dataset.upg;
+  if(!id)return;
+  const lvl=P.upg[id];
+  if(lvl>=UPG_MAX||P.coins<UPG_COST[lvl])return;
+  P.coins-=UPG_COST[lvl];P.upg[id]=lvl+1;
+  saveP();checkAch();renderShop();updateWallet();
+  beep(880,0.16,'square',0.07);
+});
+document.querySelectorAll('#segQuality button').forEach(b=>b.addEventListener('click',()=>{
+  P.set.quality=b.dataset.q;saveP();renderSettings();applyQuality();
+}));
+function toggleSet(elId,key){
+  document.getElementById(elId).addEventListener('click',()=>{
+    P.set[key]=!P.set[key];saveP();renderSettings();
+    if(key==='quality')applyQuality();
+  });
+}
+toggleSet('swTilt','tilt');toggleSet('swHaptics','haptics');toggleSet('swFps','fps');
+document.getElementById('rngSens').addEventListener('input',e=>{P.set.sens=+e.target.value;saveP();});
+(function(){
+  const btn=document.getElementById('resetBtn');
+  let armed=false,t=null;
+  btn.addEventListener('click',()=>{
+    if(!armed){armed=true;btn.textContent='TAP AGAIN';clearTimeout(t);t=setTimeout(()=>{armed=false;btn.textContent='RESET';},3000);return;}
+    ['coins','bike','owned','upg','stats','ach','missions','best','lb','name'].forEach(k=>{
+      try{localStorage.removeItem('motoCoast_'+k);}catch(e){}
+    });
+    location.reload();
+  });
+})();
+
+function buzz(pattern){
+  if(!P.set.haptics||G.muted||!navigator.vibrate)return;
+  try{navigator.vibrate(pattern);}catch(e){}
+}
 
 // ---------- AUDIO ----------
 let AC=null,eng=null,engGain=null,noiseGain=null;
@@ -505,10 +1002,40 @@ document.addEventListener('keyup',e=>{
   if(c==='KeyN'||c==='ShiftLeft'||c==='ShiftRight')keys.nos=false;
 });
 function tryGyro(){if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){DeviceOrientationEvent.requestPermission().then(r=>{if(r==='granted')enableGyro();}).catch(()=>{});}else if(window.DeviceOrientationEvent)enableGyro();}
-function enableGyro(){gyroOn=true;window.addEventListener('deviceorientation',e=>{if(e.gamma!==null)tilt=Math.max(-1,Math.min(1,e.gamma/22));});}
+function enableGyro(){gyroOn=true;window.addEventListener('deviceorientation',e=>{
+  if(!P.set.tilt){tilt=0;return;}
+  if(e.gamma!==null)tilt=Math.max(-1,Math.min(1,e.gamma/P.set.sens));
+});}
 document.getElementById('playBtn').addEventListener('click',()=>{initAudio();tryGyro();startGame();});
 document.getElementById('retryBtn').addEventListener('click',()=>{initAudio();startGame();});
 let laneCooldown=0;
+
+// ---------- GAMEPAD (laptop / console controllers) ----------
+const pad={left:false,right:false,gas:false,nos:false};
+let padPrevJump=false,padPrevPause=false,padPrevStart=false,padSeen=false;
+function pollPad(){
+  if(!navigator.getGamepads)return;
+  const list=navigator.getGamepads();
+  let gp=null;
+  for(let i=0;i<list.length;i++){if(list[i]&&list[i].connected){gp=list[i];break;}}
+  if(!gp){pad.left=pad.right=pad.gas=pad.nos=false;return;}
+  if(!padSeen){padSeen=true;showAch('CONTROLLER CONNECTED');}
+  const btn=i=>!!(gp.buttons[i]&&gp.buttons[i].pressed);
+  const ax=gp.axes.length?gp.axes[0]:0;
+  pad.left = btn(14)||ax<-0.4;
+  pad.right= btn(15)||ax>0.4;
+  pad.gas  = btn(7)||btn(1);        // right trigger, or B
+  pad.nos  = btn(2)||btn(6)||btn(4)||btn(5);  // X, left trigger, bumpers
+  const jump=btn(0);
+  if(jump&&!padPrevJump){initAudio();if(G.state==='play'&&!G.paused)jumpAction();else if(G.state!=='play')startGame();}
+  padPrevJump=jump;
+  const pause=btn(9);
+  if(pause&&!padPrevPause){initAudio();setPaused(!G.paused);}
+  padPrevPause=pause;
+  const start=btn(8);
+  if(start&&!padPrevStart&&G.state!=='play'){initAudio();startGame();}
+  padPrevStart=start;
+}
 
 // ---------- PAUSE, SCREEN WAKE LOCK, FULLSCREEN, MUTE ----------
 let wakeLock=null;
@@ -565,11 +1092,20 @@ function startGame(){
   // thrown away when the player restarts; bank it under the pending name.
   const pending=document.getElementById('nameRow');
   if(pending.classList.contains('show'))commitScore(document.getElementById('nameIn').value);
-  G.state='play';G.dist=0;G.score=0;G.speed=0;G.throttle=0.2;G.nitro=100;G.nitroOn=false;
+  G.ride=ride();
+  G.nitroMax=100*G.ride.nitro;
+  G.state='play';G.dist=0;G.score=0;G.scoreF=0;G.speed=0;G.throttle=0.2;G.nitro=G.nitroMax;G.nitroOn=false;
   G.laneIndex=1;G.targetX=0;G.bikeX=0;G.bikeY=0;G.bikeVY=0;G.jumping=false;G.lean=0;G.shake=0;G.fov=BASE_FOV;G.spawnTimer=0;G.coinTimer=0;
+  G.powerTimer=420;G.combo=0;G.comboT=0;G.invuln=0;G.tod=0;G.todHemi=0.75;
+  G.buffs={shield:0,magnet:0,double:0,slow:0};
+  G.run={coins:0,near:0,power:0,nitroT:0,topSpeed:0,maxCombo:0};
   G.weather='clear';G.weatherT=0;G.weatherNext=900;G.lightning=0;
   obstacles.forEach(o=>{o.active=false;o.group.visible=false;});
   coins.forEach(c=>{c.active=false;c.mesh.visible=false;c.light.intensity=0;});
+  powers.forEach(x=>{x.active=false;x.group.visible=false;x.light.intensity=0;});
+  shieldMesh.visible=false;
+  document.getElementById('combo').classList.remove('show');
+  renderBuffs();applyBikeLook();
   document.getElementById('start').classList.add('hidden');document.getElementById('over').classList.add('hidden');
   document.getElementById('hud').classList.remove('hidden');document.getElementById('nitro-box').classList.remove('hidden');
   document.getElementById('pad').classList.remove('hidden');document.getElementById('wtag').classList.remove('hidden');
@@ -582,8 +1118,28 @@ function gameOver(){
   G.state='over';G.paused=false;
   if(G.dist>G.best){G.best=G.dist;try{localStorage.setItem('motoCoast_best',String(Math.floor(G.best)));}catch(e){}}
   crashSound();engineSound();releaseWake();
-  if(navigator.vibrate&&!G.muted){try{navigator.vibrate([40,60,120]);}catch(e){}}
+  buzz([40,60,120]);
+  shieldMesh.visible=false;
+  document.getElementById('combo').classList.remove('show');
+  document.getElementById('buffs').innerHTML='';
   document.getElementById('finalStat').textContent=Math.floor(G.dist)+' m · SCORE '+G.score;
+
+  // Bank the run: coins picked up, distance covered and near misses all pay.
+  const distBonus=Math.floor(G.dist/25),nearBonus=G.run.near*2;
+  const base=G.run.coins*10+distBonus+nearBonus;
+  P.stats.runs++;
+  P.stats.totalNear+=G.run.near;
+  if(G.dist>P.stats.bestDist)P.stats.bestDist=Math.floor(G.dist);
+  if(G.run.topSpeed>P.stats.topSpeed)P.stats.topSpeed=Math.round(G.run.topSpeed);
+  const missionPay=scoreMissions();
+  const earned=base+missionPay;
+  P.coins+=earned;P.stats.totalCoins+=earned;
+  saveP();updateWallet();renderMissions();checkAch();
+  document.getElementById('sumCoins').textContent=G.run.coins;
+  document.getElementById('sumNear').textContent=G.run.near;
+  document.getElementById('sumSpeed').textContent=Math.round(G.run.topSpeed);
+  document.getElementById('earned').textContent='◎ +'+earned.toLocaleString()+' EARNED'+
+    (missionPay?'  ('+missionPay+' from missions)':'');
   // Only interrupt for a name when the run actually earns a leaderboard slot;
   // otherwise file it silently under the last name used.
   const row=document.getElementById('nameRow');
@@ -603,7 +1159,9 @@ function gameOver(){
   document.getElementById('over').classList.remove('hidden');
 }
 
-function spawnObstacle(){const slot=obstacles.find(o=>!o.active);if(!slot)return;const lane=Math.floor(Math.random()*3);const roll=Math.random();let kind,oncoming=false;if(roll<0.25){kind='oncoming';oncoming=true;}else if(roll<0.5)kind='car';else if(roll<0.7)kind='truck';else if(roll<0.9)kind='car';else kind='cones';const color=carColors[Math.floor(Math.random()*carColors.length)];buildObstacle(slot,kind,color,oncoming);slot.active=true;slot.lane=lane;slot.kind=kind;slot.oncoming=oncoming;slot.group.visible=true;slot.group.position.set(LANES[lane],0,oncoming?-160:FAR);slot.speed=oncoming?(G.speed+0.7):0;}
+function spawnObstacle(){const slot=obstacles.find(o=>!o.active);if(!slot)return;const lane=Math.floor(Math.random()*3);const roll=Math.random();let kind,oncoming=false;if(roll<0.25){kind='oncoming';oncoming=true;}else if(roll<0.5)kind='car';else if(roll<0.7)kind='truck';else if(roll<0.9)kind='car';else kind='cones';const color=carColors[Math.floor(Math.random()*carColors.length)];buildObstacle(slot,kind,color,oncoming);slot.active=true;slot.lane=lane;slot.kind=kind;slot.oncoming=oncoming;slot.group.visible=true;slot.group.position.set(LANES[lane],0,oncoming?-160:FAR);slot.speed=oncoming?(G.speed+0.7):0;
+  // near-miss bookkeeping: closest the player ever got, and whether it paid out
+  slot.minDx=999;slot.scored=false;slot.driftT=180+Math.random()*260;}
 function spawnCoin(){const slot=coins.find(c=>!c.active);if(!slot)return;const lane=Math.floor(Math.random()*3);slot.active=true;slot.lane=lane;slot.mesh.visible=true;slot.light.intensity=1.2;slot.mesh.position.set(LANES[lane],1.4,FAR);}
 
 function updateWeather(){
@@ -619,15 +1177,34 @@ function updateWeather(){
   if(rainy&&rain){const p=rain.geometry.attributes.position;for(let i=0;i<p.count;i++){let y=p.getY(i)-(G.weather==='storm'?2.2:1.4)-G.speed*0.5;let x=p.getX(i)+(G.weather==='storm'?0.3:0.05);if(y<0){y=40;x=(Math.random()-0.5)*60;}p.setY(i,y);p.setX(i,x);}p.needsUpdate=true;rain.position.z=camera.position.z-40;}
   if(G.weather==='storm'&&Math.random()<0.004){G.lightning=8;thunder();}
   if(G.lightning>0){G.lightning--;hemi.intensity=0.75+G.lightning*0.25;}
-  else hemi.intensity+=((G.weather==='clear'?0.75:0.5)-hemi.intensity)*0.1;
+  else hemi.intensity+=((G.weather==='clear'?G.todHemi:G.todHemi*0.62)-hemi.intensity)*0.1;
 }
 
 let rain=null;
 (function makeRain(){const g=new THREE.BufferGeometry();const pos=[];for(let i=0;i<700;i++)pos.push((Math.random()-0.5)*60,Math.random()*40,(Math.random()-0.5)*120-20);g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));rain=new THREE.Points(g,new THREE.PointsMaterial({color:0xbfdfff,size:0.5,transparent:true,opacity:0.5}));rain.visible=false;scene.add(rain);})();
 
 // ---------- MAIN LOOP ----------
+// ---------- COMBO ----------
+function flashCombo(near){
+  const el=document.getElementById('combo');
+  const txt=(near?'NEAR MISS':'')+(G.combo>1?(near?'  ':'')+G.combo+'\u00d7':'');
+  if(!txt){el.classList.remove('show');return;}
+  el.textContent=txt;
+  el.classList.add('show');
+  clearTimeout(comboHideT);
+  comboHideT=setTimeout(()=>el.classList.remove('show'),1100);
+}
+function nearMiss(){
+  G.run.near++;G.combo++;G.comboT=170;
+  if(G.combo>G.run.maxCombo)G.run.maxCombo=G.combo;
+  G.scoreF+=25*(1+Math.min(G.combo,12)*0.1)*(G.buffs.double>0?2:1);
+  flashCombo(true);
+  beep(1320,0.07,'sine',0.05);
+}
+
 let last=performance.now();
-let normalTick=0,perfN=0,perfSum=0,perfPrev=performance.now();
+let normalTick=0,normalEvery=3,perfN=0,perfSum=0,perfPrev=performance.now();
+let hudTick=0,comboHideT=null,fpsAcc=0,fpsN=0,fpsPrev=performance.now();
 function animate(now){
   requestAnimationFrame(animate);
   const dt=Math.max(0,Math.min((now-last)/16.67,2));last=now;
@@ -643,6 +1220,11 @@ function animate(now){
     }
   }else{perfN=0;perfSum=0;}
   perfPrev=now;
+  fpsAcc+=Math.min(now-fpsPrev,200);fpsPrev=now;
+  if(++fpsN>=20){
+    if(P.set.fps)document.getElementById('fps').textContent=Math.round(1000/Math.max(1,fpsAcc/fpsN))+' FPS';
+    fpsAcc=0;fpsN=0;
+  }
   const t=now*0.001;
 
   // animate sea waves (always, looks alive even on menu)
@@ -653,49 +1235,137 @@ function animate(now){
     pos.setZ(i,w);
   }
   pos.needsUpdate=true;
-  if((normalTick=(normalTick+1)%3)===0)seaGeo.computeVertexNormals();
+  if((normalTick=(normalTick+1)%normalEvery)===0)seaGeo.computeVertexNormals();
   glitterTex.offset.y=(t*0.05)%1;
   glitter.material.opacity*=0.96;glitter.material.opacity+=(G.weather==='clear'?0.55:0.12)*0.04;
 
   // seagulls
   gulls.forEach(gl=>{const u=gl.userData;u.phase+=0.06*dt;const flap=Math.sin(u.phase)*0.5;u.wl.rotation.z=flap;u.wr.rotation.z=-flap;gl.position.x-=0.05*dt;gl.position.y+=Math.sin(u.phase*0.5)*0.04;if(gl.position.x<-10){gl.position.x=80+Math.random()*40;gl.position.z=-40-Math.random()*120;}});
 
+  pollPad();
+
   if(G.state==='play'){
+    // Slow-mo scales world motion only; steering stays at full rate so the
+    // bike still feels responsive while everything else crawls.
+    const wdt=G.buffs.slow>0?dt*0.55:dt;
+    const r=G.ride;
+    G.tod=(G.dist/2600)%1;
+    applyTOD();
     updateWeather();
-    if(keys.gas)G.throttle=Math.min(1,G.throttle+0.04*dt);else G.throttle=Math.max(0.22,G.throttle-0.02*dt);
-    const nos=keys.nos&&G.nitro>0;if(nos&&!G.nitroOn)beep(620,0.22,'square',0.06);G.nitroOn=nos;
-    if(G.nitroOn){G.nitro=Math.max(0,G.nitro-1.0*dt);G.shake=Math.max(G.shake,0.12);}else G.nitro=Math.min(100,G.nitro+0.18*dt);
-    G.maxSpeed=Math.min(0.9+G.dist/4000,2.4);
-    G.speed+=(G.maxSpeed*G.throttle*(G.nitroOn?2.3:1)-G.speed)*0.06*dt;
+
+    if(keys.gas||pad.gas)G.throttle=Math.min(1,G.throttle+0.04*dt);else G.throttle=Math.max(0.22,G.throttle-0.02*dt);
+    const nos=(keys.nos||pad.nos)&&G.nitro>0;if(nos&&!G.nitroOn)beep(620,0.22,'square',0.06);G.nitroOn=nos;
+    if(G.nitroOn){G.nitro=Math.max(0,G.nitro-1.0*dt);G.shake=Math.max(G.shake,0.12);G.run.nitroT+=dt;}
+    else G.nitro=Math.min(G.nitroMax,G.nitro+0.18*r.nitro*dt);
+    G.maxSpeed=Math.min(0.9+G.dist/4000,2.4)*r.top;
+    G.speed+=(G.maxSpeed*G.throttle*(G.nitroOn?2.3:1)-G.speed)*0.06*r.accel*dt;
     engineSound();
+
+    // power-up timers
+    let buffEnded=false;
+    for(let i=0;i<POWERS.length;i++){
+      const t=POWERS[i];
+      if(t.dur&&G.buffs[t.id]>0){G.buffs[t.id]=Math.max(0,G.buffs[t.id]-dt);if(G.buffs[t.id]===0)buffEnded=true;}
+    }
+    if(G.invuln>0)G.invuln-=dt;
+    shieldMesh.visible=G.buffs.shield>0;
+    if(shieldMesh.visible){shieldMesh.material.opacity=0.13+Math.sin(now*0.008)*0.07;shieldMesh.rotation.y+=0.02*dt;}
+
+    // combos fade if the player stops threading traffic
+    if(G.comboT>0){G.comboT-=dt;if(G.comboT<=0){G.combo=0;document.getElementById('combo').classList.remove('show');}}
+    const mult=(1+Math.min(G.combo,12)*0.1)*(G.buffs.double>0?2:1);
+
     laneCooldown=Math.max(0,laneCooldown-dt);
-    const wl=keys.left||tilt<-0.35,wr=keys.right||tilt>0.35;
-    if(laneCooldown===0){if(wl&&G.laneIndex>0){G.laneIndex--;laneCooldown=8;G.lean=-1;}else if(wr&&G.laneIndex<2){G.laneIndex++;laneCooldown=8;G.lean=1;}}
+    const wl=keys.left||pad.left||tilt<-0.35,wr=keys.right||pad.right||tilt>0.35;
+    if(laneCooldown===0){if(wl&&G.laneIndex>0){G.laneIndex--;laneCooldown=8/r.grip;G.lean=-1;}else if(wr&&G.laneIndex<2){G.laneIndex++;laneCooldown=8/r.grip;G.lean=1;}}
     G.targetX=LANES[G.laneIndex];
-    G.bikeX+=(G.targetX-G.bikeX)*0.18*dt+tilt*G.speed*0.15*dt;
+    G.bikeX+=(G.targetX-G.bikeX)*0.18*r.grip*dt+tilt*G.speed*0.15*dt;
     G.bikeX=Math.max(-ROAD_W/2+1,Math.min(ROAD_W/2-1,G.bikeX));
     G.lean*=0.86;
     if(G.jumping){G.bikeVY-=0.045*dt;G.bikeY+=G.bikeVY*dt;if(G.bikeY<=0){G.bikeY=0;G.bikeVY=0;G.jumping=false;}}
     G.wheelSpin-=G.speed*0.5*dt;
-    roadTex.offset.y+=G.speed*0.06*dt;
+    roadTex.offset.y+=G.speed*0.06*wdt;
 
     G.spawnTimer-=dt;const rate=Math.max(22,55-G.speed*12);if(G.spawnTimer<=0){G.spawnTimer=rate;spawnObstacle();}
-    obstacles.forEach(o=>{if(!o.active)return;if(o.kind==='oncoming')o.group.position.z+=(G.speed+o.speed)*dt;else o.group.position.z+=G.speed*dt;if(o.group.position.z>RECYCLE){o.active=false;o.group.visible=false;}});
+    obstacles.forEach(o=>{
+      if(!o.active)return;
+      if(o.kind==='oncoming')o.group.position.z+=(G.speed+o.speed)*wdt;else o.group.position.z+=G.speed*wdt;
+      // Same-direction traffic changes lanes, but only while it is still far
+      // ahead -- swerving into the player at the last moment is not fair.
+      if(!o.oncoming&&o.kind==='car'&&o.group.position.z<-55){
+        o.driftT-=wdt;
+        if(o.driftT<=0){o.driftT=200+Math.random()*320;const nl=o.lane+(Math.random()<0.5?-1:1);if(nl>=0&&nl<3)o.lane=nl;}
+        o.group.position.x+=(LANES[o.lane]-o.group.position.x)*0.04*wdt;
+      }
+      const z=o.group.position.z;
+      if(z>-6&&z<6)o.minDx=Math.min(o.minDx,Math.abs(o.group.position.x-G.bikeX));
+      if(z>3.6&&!o.scored){o.scored=true;if(o.minDx<LANE+0.2&&G.speed>0.4)nearMiss();}
+      if(z>RECYCLE){o.active=false;o.group.visible=false;}
+    });
 
     G.coinTimer-=dt;if(G.coinTimer<=0){G.coinTimer=40+Math.random()*30;spawnCoin();}
-    coins.forEach(c=>{if(!c.active)return;c.mesh.position.z+=G.speed*dt;c.mesh.rotation.y+=0.12*dt;c.mesh.position.y=1.4+Math.sin(now*0.005+c.mesh.position.x)*0.2;if(c.mesh.position.z>RECYCLE){c.active=false;c.mesh.visible=false;c.light.intensity=0;}});
+    coins.forEach(c=>{
+      if(!c.active)return;
+      c.mesh.position.z+=G.speed*wdt;c.mesh.rotation.y+=0.12*dt;
+      c.mesh.position.y=1.4+Math.sin(now*0.005+c.mesh.position.x)*0.2;
+      if(G.buffs.magnet>0&&c.mesh.position.z>-45)c.mesh.position.x+=(G.bikeX-c.mesh.position.x)*0.07*dt;
+      if(c.mesh.position.z>RECYCLE){c.active=false;c.mesh.visible=false;c.light.intensity=0;}
+    });
 
-    leftScn.forEach(o=>o.position.z+=G.speed*dt);
-    rightScn.forEach(o=>o.position.z+=G.speed*dt);
-    rails.forEach(o=>o.position.z+=G.speed*dt);
+    G.powerTimer-=dt;if(G.powerTimer<=0){G.powerTimer=620+Math.random()*520;spawnPower();}
+    powers.forEach(x=>{
+      if(!x.active)return;
+      x.group.position.z+=G.speed*wdt;
+      x.core.rotation.y+=0.05*dt;x.core.rotation.x+=0.03*dt;x.ring.rotation.z+=0.04*dt;
+      x.group.position.y=1.5+Math.sin(now*0.004)*0.18;
+      const z=x.group.position.z;
+      if(z>-1.6&&z<3&&Math.abs(x.group.position.x-G.bikeX)<1.8){
+        x.active=false;x.group.visible=false;x.light.intensity=0;grabPower(x.type);
+      }else if(z>RECYCLE){x.active=false;x.group.visible=false;x.light.intensity=0;}
+    });
+
+    leftScn.forEach(o=>o.position.z+=G.speed*wdt);
+    rightScn.forEach(o=>o.position.z+=G.speed*wdt);
+    rails.forEach(o=>o.position.z+=G.speed*wdt);
     recycle(leftScn,o=>{o.position.x=-(9+Math.random()*9);});
     recycle(rightScn,o=>{o.position.x=8+Math.random()*3.5;});
     recycle(rails);
 
-    obstacles.forEach(o=>{if(!o.active)return;const z=o.group.position.z;if(z>-2.2&&z<3.2&&Math.abs(o.group.position.x-G.bikeX)<1.6&&G.bikeY<1.4)gameOver();});
-    coins.forEach(c=>{if(!c.active)return;const z=c.mesh.position.z;if(z>-1.5&&z<3&&Math.abs(c.mesh.position.x-G.bikeX)<1.5){c.active=false;c.mesh.visible=false;c.light.intensity=0;G.score+=50;beep(880,0.13,'sine',0.08);}});
+    obstacles.forEach(o=>{
+      if(!o.active)return;
+      const z=o.group.position.z;
+      if(z>-2.2&&z<3.2&&Math.abs(o.group.position.x-G.bikeX)<1.6&&G.bikeY<1.4){
+        if(G.invuln>0)return;
+        if(G.buffs.shield>0){
+          // spend the shield instead of ending the run
+          G.buffs.shield=0;G.invuln=70;
+          o.active=false;o.group.visible=false;
+          G.shake=Math.max(G.shake,0.35);
+          beep(300,0.3,'sawtooth',0.12);buzz([25,40,25]);
+          showAch('SHIELD ABSORBED THE HIT');
+          renderBuffs();
+        }else gameOver();
+      }
+    });
+    coins.forEach(c=>{
+      if(!c.active)return;
+      const z=c.mesh.position.z;
+      if(z>-1.5&&z<3&&Math.abs(c.mesh.position.x-G.bikeX)<1.5){
+        c.active=false;c.mesh.visible=false;c.light.intensity=0;
+        G.run.coins++;G.scoreF+=50*mult;
+        G.combo++;G.comboT=170;
+        if(G.combo>G.run.maxCombo)G.run.maxCombo=G.combo;
+        flashCombo(false);
+        beep(880,0.13,'sine',0.08);
+      }
+    });
 
-    G.dist+=G.speed*dt*1.2;G.score+=Math.floor(G.speed*0.6*dt);
+    G.dist+=G.speed*wdt*1.2;
+    G.scoreF+=G.speed*0.6*dt*mult;
+    G.score=Math.floor(G.scoreF);
+    const kmh=G.speed*120;
+    if(kmh>G.run.topSpeed)G.run.topSpeed=kmh;
+    if(buffEnded)renderBuffs();
   }
 
   // bike transforms
@@ -724,12 +1394,15 @@ function animate(now){
     document.getElementById('best').textContent='BEST '+Math.floor(G.best)+' m';
     document.getElementById('score').textContent='SCORE '+G.score;
     document.getElementById('gear').textContent=G.speed<0.1?'N':'G'+Math.min(6,Math.floor(G.speed*3)+1);
-    const nf=document.getElementById('nitro-fill');nf.style.width=G.nitro+'%';nf.style.background=G.nitroOn?'linear-gradient(90deg,#ff2d6b,#ff8a00)':'linear-gradient(90deg,#0091ff,#19e6d6)';
+    document.getElementById('coins').textContent='\u25ce '+G.run.coins;
+    const nf=document.getElementById('nitro-fill');nf.style.width=(G.nitro/G.nitroMax*100)+'%';nf.style.background=G.nitroOn?'linear-gradient(90deg,#ff2d6b,#ff8a00)':'linear-gradient(90deg,#0091ff,#19e6d6)';
+    if((hudTick=(hudTick+1)%10)===0)renderBuffs();
   }
 }
 
 window.addEventListener('resize',()=>{camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();renderer.setSize(window.innerWidth,window.innerHeight);});
 
+applyBikeLook();updateWallet();renderMissions();renderSettings();applyQuality();
 document.getElementById('loading').classList.add('hidden');
 requestAnimationFrame(animate);
 }
