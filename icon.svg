@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Moto Racer">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"    stop-color="#241a4a"/>
+      <stop offset="0.32" stop-color="#5a3a7a"/>
+      <stop offset="0.55" stop-color="#c85a6a"/>
+      <stop offset="0.74" stop-color="#ff8a4a"/>
+      <stop offset="0.88" stop-color="#ffc06a"/>
+      <stop offset="1"    stop-color="#ffe7a8"/>
+    </linearGradient>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1a4a6e"/><stop offset="1" stop-color="#0a1e3a"/>
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop offset="0"   stop-color="#fff0c8" stop-opacity=".95"/>
+      <stop offset="0.5" stop-color="#ffb45a" stop-opacity=".35"/>
+      <stop offset="1"   stop-color="#ff783c" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="512" height="512" fill="#1a1230"/>
+  <rect width="512" height="318" fill="url(#sky)"/>
+  <rect y="318" width="512" height="194" fill="url(#sea)"/>
+  <circle cx="256" cy="254" r="150" fill="url(#glow)"/>
+  <circle cx="256" cy="254" r="59" fill="#fff2c0"/>
+  <path d="M256 318 L293 512 L219 512 Z" fill="#ffdc96" opacity=".38"/>
+
+  <path d="M212 318 L300 318 L507 512 L5 512 Z" fill="#2a2630"/>
+  <path d="M250 340 L262 340 L266 372 L246 372 Z" fill="#ffd23a"/>
+  <path d="M242 402 L270 402 L278 452 L234 452 Z" fill="#ffd23a"/>
+  <path d="M230 486 L282 486 L292 512 L220 512 Z" fill="#ffd23a"/>
+
+  <ellipse cx="256" cy="418" rx="88" ry="13" fill="#000" opacity=".45"/>
+  <rect x="232" y="330" width="48" height="90" rx="18" fill="#0a0a0a"/>
+  <path d="M220 336 L292 336 L282 285 L230 285 Z" fill="#d01400"/>
+  <rect x="239" y="316" width="34" height="11" rx="4" fill="#ff3a2a"/>
+  <g fill="#33333b">
+    <rect x="176" y="290" width="20" height="19" rx="8"/><rect x="316" y="290" width="20" height="19" rx="8"/>
+    <rect x="163" y="258" width="24" height="17" rx="8"/><rect x="325" y="258" width="24" height="17" rx="8"/>
+  </g>
+  <path d="M206 268 L238 272 L221 322 L185 316 Z" fill="#120c1e"/>
+  <path d="M306 268 L274 272 L291 322 L327 316 Z" fill="#120c1e"/>
+  <path d="M206 265 L306 265 L288 293 L224 293 Z" fill="#120c1e"/>
+  <circle cx="256" cy="238" r="27" fill="#e8e8e8"/>
+  <ellipse cx="256" cy="245" rx="22" ry="15" fill="#221a0a"/>
+</svg>

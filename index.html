@@ -10,7 +10,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Moto Racer">
-<link rel="apple-touch-icon" href="icon.svg">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="description" content="Ride a sunset coastal highway. Dodge traffic, grab coins, burn nitro. Installs to your phone or laptop and plays offline.">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:none;user-select:none;-webkit-user-select:none}
 html,body{width:100%;height:100%;overflow:hidden;background:#1a1230;font-family:'Arial',sans-serif}
@@ -48,6 +51,30 @@ canvas{display:block;width:100%;height:100%}
 #loading{position:fixed;inset:0;background:#1a1230;display:flex;align-items:center;justify-content:center;z-index:60;color:#ffd23a;font-size:18px;letter-spacing:4px}
 .hidden{display:none!important}
 .weather-tag{position:fixed;top:calc(70px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);color:#fff;font-size:11px;letter-spacing:3px;z-index:10;pointer-events:none;opacity:.85;text-shadow:0 1px 4px rgba(0,0,0,.6)}
+
+/* inputs must stay selectable/typable despite the global no-select reset */
+input{user-select:text;-webkit-user-select:text;touch-action:auto}
+/* on a laptop with no touchscreen the thumb pad is just clutter */
+body.no-touch #pad{display:none}
+/* top-centre utility buttons */
+#util{position:fixed;top:calc(10px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:30}
+.ubtn{pointer-events:auto;width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:15px;color:#fff;border:1px solid rgba(255,255,255,.32);background:rgba(8,10,22,.45);backdrop-filter:blur(6px);cursor:pointer;transition:transform .05s,background .1s}
+.ubtn:active{transform:scale(.9);background:rgba(255,255,255,.2)}
+/* secondary "ghost" button used for install + control hints */
+.ghostbtn{margin-top:14px;padding:11px 26px;font-size:13px;font-weight:700;letter-spacing:2px;color:#ffd23a;background:rgba(255,210,58,.1);border:1px solid rgba(255,210,58,.55);border-radius:40px;cursor:pointer}
+.ghostbtn:active{transform:scale(.96)}
+.keyhint{margin-top:16px;color:#c8a894;font-size:12px;letter-spacing:1px;line-height:1.9}
+.keyhint b{color:#ffe6cf;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:5px;padding:1px 7px;font-size:11px}
+/* name entry on the game-over screen */
+#nameRow{margin-top:16px;display:none;gap:8px;justify-content:center;align-items:center}
+#nameRow.show{display:flex}
+#nameIn{width:160px;padding:11px 14px;font:700 14px/1 Arial,sans-serif;letter-spacing:2px;text-align:center;color:#fff;background:rgba(0,0,0,.38);border:1px solid rgba(255,255,255,.4);border-radius:12px;text-transform:uppercase;outline:none}
+#nameIn:focus{border-color:#ffd23a}
+#nameOk{padding:11px 18px;font-size:13px;font-weight:800;letter-spacing:1px;color:#1a1230;background:#ffd23a;border:none;border-radius:12px;cursor:pointer}
+/* toast for install / update feedback */
+#toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:50;max-width:88vw;padding:11px 18px;border-radius:30px;background:rgba(8,10,22,.92);border:1px solid rgba(255,255,255,.22);color:#ffe6cf;font-size:12px;letter-spacing:1px;text-align:center;opacity:0;pointer-events:none;transition:opacity .25s}
+#toast.show{opacity:1;pointer-events:auto}
+#toast button{margin-left:10px;padding:5px 12px;font-size:11px;font-weight:800;letter-spacing:1px;color:#1a1230;background:#ffd23a;border:none;border-radius:20px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -85,29 +112,69 @@ canvas{display:block;width:100%;height:100%}
   <div class="btn" id="br">▶</div>
 </div>
 
+<div id="util" class="hidden">
+  <div class="ubtn" id="bpause" title="Pause (P)">⏸</div>
+  <div class="ubtn" id="bfull" title="Fullscreen (F)">⛶</div>
+  <div class="ubtn" id="bmute" title="Sound (M)">🔊</div>
+</div>
+
 <div class="screen" id="start">
   <h1>MOTO RACER</h1>
   <h2>COASTLINE</h2>
-  <p>TILT or ◀▶ to steer · GAS · NOS · JUMP</p>
+  <p id="ctrlLine">TILT or ◀▶ to steer · GAS · NOS · JUMP</p>
   <div class="sub">Sunset coastal highway · dodge traffic · grab coins</div>
   <button class="bigbtn" id="playBtn">START ENGINE</button>
+  <button class="ghostbtn hidden" id="installBtn">⬇ INSTALL APP</button>
+  <div class="sub hidden" id="iosHint">On iPhone: tap <b>Share</b> then <b>Add to Home Screen</b></div>
+  <div class="keyhint hidden" id="keyHint">
+    <b>←</b> <b>→</b> steer · <b>↑</b> gas · <b>Space</b> jump · <b>N</b> nitro<br>
+    <b>P</b> pause · <b>F</b> fullscreen · <b>M</b> mute
+  </div>
+</div>
+
+<div class="screen hidden" id="paused">
+  <h1 style="color:#19e6d6;font-size:min(10vw,58px)">PAUSED</h1>
+  <div class="sub">Engine idling…</div>
+  <button class="bigbtn" id="resumeBtn">RESUME</button>
+  <button class="ghostbtn" id="quitBtn">END RUN</button>
 </div>
 
 <div class="screen hidden" id="over">
   <h1 style="color:#ff4a1a">WIPEOUT</h1>
   <div class="stat-big" id="finalStat">0 m · SCORE 0</div>
+  <div id="nameRow">
+    <input id="nameIn" maxlength="10" placeholder="RIDER" autocomplete="off"
+           autocapitalize="characters" spellcheck="false" aria-label="Name for the leaderboard">
+    <button id="nameOk">SAVE</button>
+  </div>
+  <div id="lbPreview" style="white-space:pre-line;margin-top:16px;color:#ffe0c0;font-size:13px;letter-spacing:1px;line-height:1.7"></div>
   <button class="bigbtn" id="retryBtn">RIDE AGAIN</button>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<div id="toast"></div>
+
 <script>
-(function(){
+/* three.js is vendored under ./vendor so the installed app runs with no network
+   at all. The CDN is kept only as a fallback if that local copy is missing. */
+function loadThree(done){
+  var srcs=['vendor/three.min.js','https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'];
+  (function next(i){
+    if(window.THREE)return done();
+    if(i>=srcs.length){document.getElementById('loading').textContent='Failed to load 3D engine';return;}
+    var s=document.createElement('script');
+    s.src=srcs[i];s.async=false;
+    s.onload=function(){window.THREE?done():next(i+1);};
+    s.onerror=function(){next(i+1);};
+    document.head.appendChild(s);
+  })(0);
+}
+function startMoto(){
 'use strict';
-if(!window.THREE){document.getElementById('loading').textContent='Failed to load 3D engine';return;}
 
 const container=document.getElementById('game');
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+let dpr=Math.min(window.devicePixelRatio,2);
+renderer.setPixelRatio(dpr);
 renderer.setSize(window.innerWidth,window.innerHeight);
 container.appendChild(renderer.domElement);
 
@@ -377,13 +444,15 @@ function makeGull(){
 for(let i=0;i<4;i++){const gl=makeGull();gl.position.set(20+Math.random()*60,30+Math.random()*25,-40-Math.random()*120);gl.scale.setScalar(1.5+Math.random());scene.add(gl);gulls.push(gl);}
 
 // ---------- GAME STATE ----------
-const G={state:'idle',dist:0,score:0,best:0,speed:0,maxSpeed:0.9,throttle:0,nitro:100,nitroOn:false,
+function readNum(k){try{return +localStorage.getItem(k)||0;}catch(e){return 0;}}
+function readFlag(k){try{return localStorage.getItem(k)==='1';}catch(e){return false;}}
+const G={state:'idle',paused:false,muted:readFlag('motoCoast_muted'),dist:0,score:0,best:readNum('motoCoast_best'),speed:0,maxSpeed:0.9,throttle:0,nitro:100,nitroOn:false,
 laneIndex:1,targetX:0,bikeX:0,bikeY:0,bikeVY:0,jumping:false,lean:0,wheelSpin:0,shake:0,fov:BASE_FOV,
 spawnTimer:0,coinTimer:0,weather:'clear',weatherT:0,weatherNext:900,lightning:0};
 
 // ---------- AUDIO ----------
 let AC=null,eng=null,engGain=null,noiseGain=null;
-function initAudio(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)();eng=AC.createOscillator();engGain=AC.createGain();eng.type='sawtooth';eng.frequency.value=70;engGain.gain.value=0;const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=900;eng.connect(lp);lp.connect(engGain);engGain.connect(AC.destination);eng.start();const n=AC.createBufferSource();const buf=AC.createBuffer(1,AC.sampleRate,AC.sampleRate);const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;n.buffer=buf;n.loop=true;const bp=AC.createBiquadFilter();bp.type='bandpass';bp.frequency.value=500;noiseGain=AC.createGain();noiseGain.gain.value=0;n.connect(bp);bp.connect(noiseGain);noiseGain.connect(AC.destination);n.start();}catch(e){}}
+function initAudio(){if(AC){if(AC.state==='suspended'&&!G.muted){try{AC.resume();}catch(e){}}return;}try{AC=new(window.AudioContext||window.webkitAudioContext)();eng=AC.createOscillator();engGain=AC.createGain();eng.type='sawtooth';eng.frequency.value=70;engGain.gain.value=0;const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=900;eng.connect(lp);lp.connect(engGain);engGain.connect(AC.destination);eng.start();const n=AC.createBufferSource();const buf=AC.createBuffer(1,AC.sampleRate,AC.sampleRate);const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;n.buffer=buf;n.loop=true;const bp=AC.createBiquadFilter();bp.type='bandpass';bp.frequency.value=500;noiseGain=AC.createGain();noiseGain.gain.value=0;n.connect(bp);bp.connect(noiseGain);noiseGain.connect(AC.destination);n.start();}catch(e){}}
 function engineSound(){if(!AC)return;eng.frequency.setTargetAtTime(70+G.speed*60+(G.nitroOn?90:0),AC.currentTime,0.06);engGain.gain.setTargetAtTime(G.speed>0.05?0.05:0,AC.currentTime,0.08);noiseGain.gain.setTargetAtTime(G.speed*0.02,AC.currentTime,0.1);}
 function beep(f,dur,type,vol){if(!AC)return;const o=AC.createOscillator(),g=AC.createGain();o.type=type||'sine';o.frequency.value=f;g.gain.value=vol||0.08;o.connect(g);g.connect(AC.destination);o.start();o.frequency.exponentialRampToValueAtTime(f*1.4,AC.currentTime+dur);g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);o.stop(AC.currentTime+dur);}
 function crashSound(){if(!AC)return;const o=AC.createOscillator(),g=AC.createGain();o.type='sawtooth';o.frequency.value=180;g.gain.value=0.3;o.connect(g);g.connect(AC.destination);o.start();o.frequency.exponentialRampToValueAtTime(35,AC.currentTime+0.5);g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+0.55);o.stop(AC.currentTime+0.55);}
@@ -391,7 +460,16 @@ function thunder(){if(!AC)return;const buf=AC.createBuffer(1,AC.sampleRate*0.9,A
 
 // ---------- LEADERBOARD ----------
 function loadLB(){try{return JSON.parse(localStorage.getItem('motoCoast_lb')||'[]');}catch(e){return[];}}
-function saveScore(){const lb=loadLB();let name=prompt('New run! Enter name for leaderboard:','RIDER')||'RIDER';lb.push({n:name.toUpperCase().slice(0,10),s:G.score,d:Math.floor(G.dist)});lb.sort((a,b)=>b.s-a.s);try{localStorage.setItem('motoCoast_lb',JSON.stringify(lb.slice(0,10)));}catch(e){}}
+function savedName(){try{return localStorage.getItem('motoCoast_name')||'';}catch(e){return '';}}
+function madeTop(score){const lb=loadLB();return lb.length<5||score>(lb[4]?lb[4].s:0);}
+function commitScore(name){
+  name=(name||'RIDER').toUpperCase().replace(/[^A-Z0-9 ._-]/g,'').trim().slice(0,10)||'RIDER';
+  try{localStorage.setItem('motoCoast_name',name);}catch(e){}
+  const lb=loadLB();lb.push({n:name,s:G.score,d:Math.floor(G.dist)});lb.sort((a,b)=>b.s-a.s);
+  try{localStorage.setItem('motoCoast_lb',JSON.stringify(lb.slice(0,10)));}catch(e){}
+  renderLB();
+}
+function renderLB(){const t=lbText();const d=document.getElementById('lbPreview');if(d)d.textContent=t?('\u{1F3C6} TOP RIDERS\n'+t):'';}
 function lbText(){const lb=loadLB();if(!lb.length)return'';return lb.slice(0,5).map((e,i)=>`#${i+1} ${e.n} — ${e.s} (${e.d}m)`).join('\n');}
 
 // ---------- CONTROLS ----------
@@ -401,18 +479,92 @@ bindHold('bgas','gas');bindHold('bnos','nos');bindHold('bl','left');bindHold('br
 function jumpAction(){if(G.state==='play'&&!G.jumping){G.bikeVY=0.42;G.jumping=true;}}
 document.getElementById('bjump').addEventListener('touchstart',e=>{e.preventDefault();initAudio();jumpAction();},{passive:false});
 document.getElementById('bjump').addEventListener('mousedown',()=>{initAudio();jumpAction();});
-document.addEventListener('keydown',e=>{if(e.code==='ArrowUp')keys.gas=true;if(e.code==='ArrowLeft')keys.left=true;if(e.code==='ArrowRight')keys.right=true;if(e.code==='KeyN')keys.nos=true;if(e.code==='Space'){e.preventDefault();initAudio();if(G.state==='idle'||G.state==='over')startGame();else jumpAction();}});
-document.addEventListener('keyup',e=>{if(e.code==='ArrowUp')keys.gas=false;if(e.code==='ArrowLeft')keys.left=false;if(e.code==='ArrowRight')keys.right=false;if(e.code==='KeyN')keys.nos=false;});
+document.addEventListener('keydown',e=>{
+  if(e.target&&e.target.tagName==='INPUT')return;
+  const c=e.code;
+  if(c==='ArrowUp'||c==='KeyW')keys.gas=true;
+  if(c==='ArrowLeft'||c==='KeyA')keys.left=true;
+  if(c==='ArrowRight'||c==='KeyD')keys.right=true;
+  if(c==='KeyN'||c==='ShiftLeft'||c==='ShiftRight')keys.nos=true;
+  if(c==='KeyP'||c==='Escape'){e.preventDefault();setPaused(!G.paused);}
+  if(c==='KeyF'){e.preventDefault();toggleFullscreen();}
+  if(c==='KeyM'){e.preventDefault();setMuted(!G.muted);}
+  if(c==='Space'||c==='Enter'){
+    e.preventDefault();initAudio();
+    if(G.state==='idle'||G.state==='over')startGame();
+    else if(G.paused)setPaused(false);
+    else if(c==='Space')jumpAction();
+  }
+});
+document.addEventListener('keyup',e=>{
+  if(e.target&&e.target.tagName==='INPUT')return;
+  const c=e.code;
+  if(c==='ArrowUp'||c==='KeyW')keys.gas=false;
+  if(c==='ArrowLeft'||c==='KeyA')keys.left=false;
+  if(c==='ArrowRight'||c==='KeyD')keys.right=false;
+  if(c==='KeyN'||c==='ShiftLeft'||c==='ShiftRight')keys.nos=false;
+});
 function tryGyro(){if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){DeviceOrientationEvent.requestPermission().then(r=>{if(r==='granted')enableGyro();}).catch(()=>{});}else if(window.DeviceOrientationEvent)enableGyro();}
 function enableGyro(){gyroOn=true;window.addEventListener('deviceorientation',e=>{if(e.gamma!==null)tilt=Math.max(-1,Math.min(1,e.gamma/22));});}
 document.getElementById('playBtn').addEventListener('click',()=>{initAudio();tryGyro();startGame();});
 document.getElementById('retryBtn').addEventListener('click',()=>{initAudio();startGame();});
 let laneCooldown=0;
 
+// ---------- PAUSE, SCREEN WAKE LOCK, FULLSCREEN, MUTE ----------
+let wakeLock=null;
+function requestWake(){
+  if(!('wakeLock' in navigator)||wakeLock)return;
+  navigator.wakeLock.request('screen').then(w=>{wakeLock=w;w.addEventListener('release',()=>{wakeLock=null;});}).catch(()=>{});
+}
+function releaseWake(){try{if(wakeLock)wakeLock.release();}catch(e){}wakeLock=null;}
+function setPaused(p){
+  if(G.state!=='play'||G.paused===p)return;
+  G.paused=p;
+  document.getElementById('paused').classList.toggle('hidden',!p);
+  if(p){keys.gas=keys.nos=keys.left=keys.right=false;if(AC){try{AC.suspend();}catch(e){}}releaseWake();}
+  else{if(AC&&!G.muted){try{AC.resume();}catch(e){}}requestWake();last=performance.now();}
+}
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden)setPaused(true);
+  else if(G.state==='play'&&!G.paused)requestWake();
+});
+function toggleFullscreen(){
+  const el=document.documentElement;
+  const fs=document.fullscreenElement||document.webkitFullscreenElement;
+  try{
+    if(!fs)(el.requestFullscreen||el.webkitRequestFullscreen).call(el);
+    else (document.exitFullscreen||document.webkitExitFullscreen).call(document);
+  }catch(e){}
+}
+function setMuted(m){
+  G.muted=m;
+  try{localStorage.setItem('motoCoast_muted',m?'1':'0');}catch(e){}
+  document.getElementById('bmute').textContent=m?'\u{1F507}':'\u{1F50A}';
+  if(AC){try{m?AC.suspend():AC.resume();}catch(e){}}
+}
+document.getElementById('bpause').addEventListener('click',()=>setPaused(!G.paused));
+document.getElementById('bfull').addEventListener('click',toggleFullscreen);
+document.getElementById('bmute').addEventListener('click',()=>setMuted(!G.muted));
+document.getElementById('resumeBtn').addEventListener('click',()=>setPaused(false));
+document.getElementById('quitBtn').addEventListener('click',()=>{setPaused(false);gameOver();});
+setMuted(G.muted);
+document.getElementById('nameOk').addEventListener('click',()=>{
+  commitScore(document.getElementById('nameIn').value);
+  document.getElementById('nameRow').classList.remove('show');
+});
+document.getElementById('nameIn').addEventListener('keydown',e=>{
+  e.stopPropagation();
+  if(e.key==='Enter')document.getElementById('nameOk').click();
+});
+
 // ---------- recycle scenery ----------
 function recycle(arr,sideFn){arr.forEach(o=>{if(o.position.z>RECYCLE+6){o.position.z-=SCENE_LEN;if(sideFn)sideFn(o);}});}
 
 function startGame(){
+  // A qualifying run left on screen without pressing SAVE would otherwise be
+  // thrown away when the player restarts; bank it under the pending name.
+  const pending=document.getElementById('nameRow');
+  if(pending.classList.contains('show'))commitScore(document.getElementById('nameIn').value);
   G.state='play';G.dist=0;G.score=0;G.speed=0;G.throttle=0.2;G.nitro=100;G.nitroOn=false;
   G.laneIndex=1;G.targetX=0;G.bikeX=0;G.bikeY=0;G.bikeVY=0;G.jumping=false;G.lean=0;G.shake=0;G.fov=BASE_FOV;G.spawnTimer=0;G.coinTimer=0;
   G.weather='clear';G.weatherT=0;G.weatherNext=900;G.lightning=0;
@@ -421,17 +573,34 @@ function startGame(){
   document.getElementById('start').classList.add('hidden');document.getElementById('over').classList.add('hidden');
   document.getElementById('hud').classList.remove('hidden');document.getElementById('nitro-box').classList.remove('hidden');
   document.getElementById('pad').classList.remove('hidden');document.getElementById('wtag').classList.remove('hidden');
+  document.getElementById('util').classList.remove('hidden');
+  document.getElementById('paused').classList.add('hidden');
+  document.getElementById('nameRow').classList.remove('show');
+  G.paused=false;requestWake();
 }
 function gameOver(){
-  G.state='over';if(G.dist>G.best)G.best=G.dist;crashSound();engineSound();
+  G.state='over';G.paused=false;
+  if(G.dist>G.best){G.best=G.dist;try{localStorage.setItem('motoCoast_best',String(Math.floor(G.best)));}catch(e){}}
+  crashSound();engineSound();releaseWake();
+  if(navigator.vibrate&&!G.muted){try{navigator.vibrate([40,60,120]);}catch(e){}}
   document.getElementById('finalStat').textContent=Math.floor(G.dist)+' m · SCORE '+G.score;
-  const over=document.getElementById('over');
-  let lbDiv=document.getElementById('lbPreview');
-  if(!lbDiv){lbDiv=document.createElement('div');lbDiv.id='lbPreview';lbDiv.style.cssText='white-space:pre-line;margin-top:16px;color:#ffe0c0;font-size:13px;letter-spacing:1px;line-height:1.7;';over.insertBefore(lbDiv,document.getElementById('retryBtn'));}
-  setTimeout(()=>{saveScore();const t=lbText();const d=document.getElementById('lbPreview');d.textContent=t?('🏆 TOP RIDERS\n'+t):'';},500);
+  // Only interrupt for a name when the run actually earns a leaderboard slot;
+  // otherwise file it silently under the last name used.
+  const row=document.getElementById('nameRow');
+  if(G.score>0&&madeTop(G.score)){
+    const inp=document.getElementById('nameIn');
+    inp.value=savedName();
+    row.classList.add('show');
+    renderLB();
+  }else{
+    row.classList.remove('show');
+    if(G.score>0)commitScore(savedName());else renderLB();
+  }
   document.getElementById('hud').classList.add('hidden');document.getElementById('nitro-box').classList.add('hidden');
   document.getElementById('pad').classList.add('hidden');document.getElementById('wtag').classList.add('hidden');
-  over.classList.remove('hidden');
+  document.getElementById('util').classList.add('hidden');
+  document.getElementById('paused').classList.add('hidden');
+  document.getElementById('over').classList.remove('hidden');
 }
 
 function spawnObstacle(){const slot=obstacles.find(o=>!o.active);if(!slot)return;const lane=Math.floor(Math.random()*3);const roll=Math.random();let kind,oncoming=false;if(roll<0.25){kind='oncoming';oncoming=true;}else if(roll<0.5)kind='car';else if(roll<0.7)kind='truck';else if(roll<0.9)kind='car';else kind='cones';const color=carColors[Math.floor(Math.random()*carColors.length)];buildObstacle(slot,kind,color,oncoming);slot.active=true;slot.lane=lane;slot.kind=kind;slot.oncoming=oncoming;slot.group.visible=true;slot.group.position.set(LANES[lane],0,oncoming?-160:FAR);slot.speed=oncoming?(G.speed+0.7):0;}
@@ -458,9 +627,22 @@ let rain=null;
 
 // ---------- MAIN LOOP ----------
 let last=performance.now();
+let normalTick=0,perfN=0,perfSum=0,perfPrev=performance.now();
 function animate(now){
   requestAnimationFrame(animate);
-  const dt=Math.min((now-last)/16.67,2);last=now;
+  const dt=Math.max(0,Math.min((now-last)/16.67,2));last=now;
+  if(G.paused){perfPrev=now;renderer.render(scene,camera);return;}
+  // Drop resolution rather than frame rate on a phone that cannot keep up.
+  if(G.state==='play'){
+    perfSum+=Math.min(now-perfPrev,100);perfN++;
+    if(perfN>=90){
+      const avg=perfSum/perfN;perfN=0;perfSum=0;
+      let want=dpr;
+      if(avg>22&&dpr>1)want=1;else if(avg>33&&dpr>0.75)want=0.75;
+      if(want!==dpr){dpr=want;renderer.setPixelRatio(dpr);renderer.setSize(window.innerWidth,window.innerHeight);}
+    }
+  }else{perfN=0;perfSum=0;}
+  perfPrev=now;
   const t=now*0.001;
 
   // animate sea waves (always, looks alive even on menu)
@@ -471,7 +653,7 @@ function animate(now){
     pos.setZ(i,w);
   }
   pos.needsUpdate=true;
-  if((Math.floor(now/33))%1===0)seaGeo.computeVertexNormals();
+  if((normalTick=(normalTick+1)%3)===0)seaGeo.computeVertexNormals();
   glitterTex.offset.y=(t*0.05)%1;
   glitter.material.opacity*=0.96;glitter.material.opacity+=(G.weather==='clear'?0.55:0.12)*0.04;
 
@@ -550,10 +732,88 @@ window.addEventListener('resize',()=>{camera.aspect=window.innerWidth/window.inn
 
 document.getElementById('loading').classList.add('hidden');
 requestAnimationFrame(animate);
-})();
+}
+loadThree(startMoto);
 </script>
 <script>
-if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}
+/* Install + offline plumbing. Deliberately kept outside the game so it still
+   works if WebGL or three.js fails on this device. */
+(function(){
+  'use strict';
+  var toastEl=document.getElementById('toast'),toastTimer=null;
+  function toast(html,ms){
+    toastEl.innerHTML=html;
+    toastEl.classList.add('show');
+    if(toastTimer)clearTimeout(toastTimer);
+    if(ms)toastTimer=setTimeout(function(){toastEl.classList.remove('show');},ms);
+  }
+
+  var installBtn=document.getElementById('installBtn');
+  var iosHint=document.getElementById('iosHint');
+  var installed=window.matchMedia('(display-mode: standalone)').matches||
+                window.matchMedia('(display-mode: fullscreen)').matches||
+                navigator.standalone===true;
+
+  // Chrome / Edge / Samsung on Android, and Chrome / Edge on desktop.
+  var deferred=null;
+  window.addEventListener('beforeinstallprompt',function(e){
+    e.preventDefault();
+    deferred=e;
+    if(!installed)installBtn.classList.remove('hidden');
+  });
+  installBtn.addEventListener('click',function(){
+    if(!deferred)return;
+    installBtn.classList.add('hidden');
+    deferred.prompt();
+    deferred.userChoice.then(function(choice){
+      deferred=null;
+      if(choice.outcome!=='accepted')installBtn.classList.remove('hidden');
+    }).catch(function(){});
+  });
+  window.addEventListener('appinstalled',function(){
+    installed=true;
+    installBtn.classList.add('hidden');
+    iosHint.classList.add('hidden');
+    toast('Installed \u2014 launch Moto Racer like any other app',4000);
+  });
+
+  // iOS Safari never fires beforeinstallprompt, so spell out the manual route.
+  var isIOS=/iP(hone|ad|od)/.test(navigator.userAgent)||
+            (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  if(isIOS&&!installed)iosHint.classList.remove('hidden');
+
+  // No touchscreen: hide the thumb pad and advertise the keyboard instead.
+  if(!('ontouchstart' in window)&&!navigator.maxTouchPoints){
+    document.body.classList.add('no-touch');
+    document.getElementById('keyHint').classList.remove('hidden');
+    document.getElementById('ctrlLine').textContent='Keyboard: steer \u00b7 gas \u00b7 jump \u00b7 nitro';
+  }
+
+  if('serviceWorker' in navigator){
+    // Reloading on controllerchange is only correct for a *replacement* worker;
+    // on the very first install there is no controller and no reload is wanted.
+    var hadController=!!navigator.serviceWorker.controller,reloading=false;
+    navigator.serviceWorker.addEventListener('controllerchange',function(){
+      if(!hadController||reloading)return;
+      reloading=true;location.reload();
+    });
+    window.addEventListener('load',function(){
+      navigator.serviceWorker.register('sw.js').then(function(reg){
+        reg.addEventListener('updatefound',function(){
+          var incoming=reg.installing;
+          if(!incoming)return;
+          incoming.addEventListener('statechange',function(){
+            if(incoming.state==='installed'&&navigator.serviceWorker.controller){
+              toast('New version ready<button id="reloadBtn">RELOAD</button>',0);
+              var b=document.getElementById('reloadBtn');
+              if(b)b.addEventListener('click',function(){incoming.postMessage('SKIP_WAITING');});
+            }
+          });
+        });
+      }).catch(function(){});
+    });
+  }
+})();
 </script>
 </body>
 </html>
