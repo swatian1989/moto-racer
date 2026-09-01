@@ -90,8 +90,13 @@ milestones.
 ## Settings
 
 Graphics preset (low / medium / high), tilt steering with an adjustable
-sensitivity, vibration, an optional FPS readout, and a progress reset. The game
-also drops its own resolution automatically if a device cannot hold frame rate.
+sensitivity, volume, vibration, an optional FPS readout, and a progress reset.
+The game also drops its own resolution automatically if a device cannot hold
+frame rate.
+
+**Moving a save between the app and the website.** They are separate origins,
+so they cannot see each other's storage. Settings has a **Save Data** box:
+press EXPORT in one, paste the code into the other, press IMPORT.
 
 Your coins, bikes, upgrades, missions, achievements, best distance and the
 top-10 leaderboard are all stored on your device.

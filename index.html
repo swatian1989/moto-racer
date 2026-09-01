@@ -53,7 +53,12 @@ canvas{display:block;width:100%;height:100%}
 .weather-tag{position:fixed;top:calc(70px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);color:#fff;font-size:11px;letter-spacing:3px;z-index:10;pointer-events:none;opacity:.85;text-shadow:0 1px 4px rgba(0,0,0,.6)}
 
 /* inputs must stay selectable/typable despite the global no-select reset */
-input{user-select:text;-webkit-user-select:text;touch-action:auto}
+input,textarea{user-select:text;-webkit-user-select:text;touch-action:auto}
+#saveBox{width:100%;height:76px;margin-top:9px;padding:9px 11px;font:400 10px/1.45 Consolas,monospace;color:#ffe6cf;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.24);border-radius:10px;resize:none;outline:none;word-break:break-all}
+#saveBox:focus{border-color:#ffd23a}
+#saveMsg{margin-top:8px;font-size:10px;letter-spacing:.5px;min-height:13px}
+#saveMsg.ok{color:#19e6d6}
+#saveMsg.bad{color:#ff8a6a}
 /* on a laptop with no touchscreen the thumb pad is just clutter */
 body.no-touch #pad{display:none}
 /* top-centre utility buttons */
@@ -289,10 +294,25 @@ input[type=range]{width:120px;accent-color:#ffd23a}
         <label>SHOW FPS</label>
         <div class="switch" id="swFps"><i></i></div>
       </div>
+      <div class="setrow">
+        <label>VOLUME</label>
+        <input type="range" id="rngVol" min="0" max="100" step="1">
+      </div>
       <div class="setrow" style="border:0">
         <label>RESET PROGRESS<span class="hint">Clears coins, bikes and scores</span></label>
         <button class="cardbtn ghost" id="resetBtn" style="width:auto;margin:0;padding:9px 16px">RESET</button>
       </div>
+    </div>
+    <div class="card">
+      <label style="font-size:12px;font-weight:700;letter-spacing:1.5px;color:#ffe6cf">SAVE DATA
+        <span class="hint">The app and the website keep separate saves. Copy your code from one and paste it into the other.</span>
+      </label>
+      <textarea id="saveBox" spellcheck="false" placeholder="Press EXPORT to get your save code, or paste one here and press IMPORT"></textarea>
+      <div style="display:flex;gap:8px;margin-top:9px">
+        <button class="cardbtn" id="saveExport" style="margin:0">EXPORT</button>
+        <button class="cardbtn ghost" id="saveImport" style="margin:0">IMPORT</button>
+      </div>
+      <div id="saveMsg"></div>
     </div>
   </div>
   <button class="bigbtn panel-back" data-panel="settings">BACK</button>
@@ -1139,7 +1159,7 @@ const ACHS=[
   {id:'speed300', text:'300 km/h'}
 ];
 
-const DEF_SET={quality:'high',tilt:true,sens:22,haptics:true,fps:false};
+const DEF_SET={quality:'high',tilt:true,sens:22,haptics:true,fps:false,volume:70};
 const P={
   coins:readNum('motoCoast_coins'),
   owned:readJSON('motoCoast_owned',['street']),
@@ -1328,6 +1348,7 @@ function renderSettings(){
   document.getElementById('swHaptics').classList.toggle('on',!!P.set.haptics);
   document.getElementById('swFps').classList.toggle('on',!!P.set.fps);
   document.getElementById('rngSens').value=P.set.sens;
+  document.getElementById('rngVol').value=P.set.volume;
   document.getElementById('fps').classList.toggle('hidden',!P.set.fps);
 }
 function applyQuality(){
@@ -1396,6 +1417,61 @@ function toggleSet(elId,key){
 }
 toggleSet('swTilt','tilt');toggleSet('swHaptics','haptics');toggleSet('swFps','fps');
 document.getElementById('rngSens').addEventListener('input',e=>{P.set.sens=+e.target.value;saveP();});
+function applyVolume(){if(master)master.gain.value=P.set.volume/100;}
+document.getElementById('rngVol').addEventListener('input',e=>{
+  P.set.volume=+e.target.value;applyVolume();saveP();
+});
+
+// ---------- SAVE TRANSFER ----------
+// The desktop app and the website are different origins, so they cannot see
+// each other's localStorage. This moves a save across as a block of text,
+// which works everywhere -- no file pickers, no downloads, no clipboard
+// permissions needed on the receiving end.
+const SAVE_KEYS=['coins','bike','world','worlds','owned','upg','stats','ach','missions','best','lb','name','muted','set'];
+function exportSave(){
+  const o={v:1};
+  SAVE_KEYS.forEach(k=>{
+    try{const val=localStorage.getItem('motoCoast_'+k);if(val!==null)o[k]=val;}catch(e){}
+  });
+  return JSON.stringify(o);
+}
+function importSave(txt){
+  let o;
+  try{o=JSON.parse((txt||'').trim());}catch(e){return 'That is not a valid save code.';}
+  if(!o||typeof o!=='object'||Array.isArray(o))return 'That is not a valid save code.';
+  let count=0;
+  SAVE_KEYS.forEach(k=>{
+    if(typeof o[k]==='string'){try{localStorage.setItem('motoCoast_'+k,o[k]);count++;}catch(e){}}
+  });
+  if(!count)return 'No progress found in that code.';
+  return null;
+}
+function saveMsg(text,ok){
+  const el=document.getElementById('saveMsg');
+  el.textContent=text;el.className=ok?'ok':'bad';
+}
+document.getElementById('saveExport').addEventListener('click',()=>{
+  const box=document.getElementById('saveBox');
+  box.value=exportSave();
+  box.focus();box.select();
+  let copied=false;
+  try{copied=document.execCommand('copy');}catch(e){}
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(box.value).then(()=>{
+      saveMsg('Save code copied. Paste it into the other version and press IMPORT.',true);
+    }).catch(()=>{
+      saveMsg(copied?'Save code copied.':'Save code ready \u2014 copy the text above.',true);
+    });
+  }else{
+    saveMsg(copied?'Save code copied.':'Save code ready \u2014 copy the text above.',true);
+  }
+});
+document.getElementById('saveImport').addEventListener('click',()=>{
+  const err=importSave(document.getElementById('saveBox').value);
+  if(err){saveMsg(err,false);return;}
+  saveMsg('Progress restored. Reloading\u2026',true);
+  setTimeout(()=>location.reload(),900);
+});
 (function(){
   const btn=document.getElementById('resetBtn');
   let armed=false,t=null;
@@ -1414,12 +1490,12 @@ function buzz(pattern){
 }
 
 // ---------- AUDIO ----------
-let AC=null,eng=null,engGain=null,noiseGain=null;
-function initAudio(){if(AC){if(AC.state==='suspended'&&!G.muted){try{AC.resume();}catch(e){}}return;}try{AC=new(window.AudioContext||window.webkitAudioContext)();eng=AC.createOscillator();engGain=AC.createGain();eng.type='sawtooth';eng.frequency.value=70;engGain.gain.value=0;const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=900;eng.connect(lp);lp.connect(engGain);engGain.connect(AC.destination);eng.start();const n=AC.createBufferSource();const buf=AC.createBuffer(1,AC.sampleRate,AC.sampleRate);const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;n.buffer=buf;n.loop=true;const bp=AC.createBiquadFilter();bp.type='bandpass';bp.frequency.value=500;noiseGain=AC.createGain();noiseGain.gain.value=0;n.connect(bp);bp.connect(noiseGain);noiseGain.connect(AC.destination);n.start();}catch(e){}}
+let AC=null,eng=null,engGain=null,noiseGain=null,master=null;
+function initAudio(){if(AC){if(AC.state==='suspended'&&!G.muted){try{AC.resume();}catch(e){}}return;}try{AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=P.set.volume/100;master.connect(AC.destination);eng=AC.createOscillator();engGain=AC.createGain();eng.type='sawtooth';eng.frequency.value=70;engGain.gain.value=0;const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=900;eng.connect(lp);lp.connect(engGain);engGain.connect(master);eng.start();const n=AC.createBufferSource();const buf=AC.createBuffer(1,AC.sampleRate,AC.sampleRate);const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;n.buffer=buf;n.loop=true;const bp=AC.createBiquadFilter();bp.type='bandpass';bp.frequency.value=500;noiseGain=AC.createGain();noiseGain.gain.value=0;n.connect(bp);bp.connect(noiseGain);noiseGain.connect(master);n.start();}catch(e){}}
 function engineSound(){if(!AC)return;eng.frequency.setTargetAtTime(70+G.speed*60+(G.nitroOn?90:0),AC.currentTime,0.06);engGain.gain.setTargetAtTime(G.speed>0.05?0.05:0,AC.currentTime,0.08);noiseGain.gain.setTargetAtTime(G.speed*0.02,AC.currentTime,0.1);}
-function beep(f,dur,type,vol){if(!AC)return;const o=AC.createOscillator(),g=AC.createGain();o.type=type||'sine';o.frequency.value=f;g.gain.value=vol||0.08;o.connect(g);g.connect(AC.destination);o.start();o.frequency.exponentialRampToValueAtTime(f*1.4,AC.currentTime+dur);g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);o.stop(AC.currentTime+dur);}
-function crashSound(){if(!AC)return;const o=AC.createOscillator(),g=AC.createGain();o.type='sawtooth';o.frequency.value=180;g.gain.value=0.3;o.connect(g);g.connect(AC.destination);o.start();o.frequency.exponentialRampToValueAtTime(35,AC.currentTime+0.5);g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+0.55);o.stop(AC.currentTime+0.55);}
-function thunder(){if(!AC)return;const buf=AC.createBuffer(1,AC.sampleRate*0.9,AC.sampleRate);const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.exp(-i/(AC.sampleRate*0.18));const s=AC.createBufferSource(),g=AC.createGain();s.buffer=buf;g.gain.value=0.4;s.connect(g);g.connect(AC.destination);s.start();}
+function beep(f,dur,type,vol){if(!AC)return;const o=AC.createOscillator(),g=AC.createGain();o.type=type||'sine';o.frequency.value=f;g.gain.value=vol||0.08;o.connect(g);g.connect(master);o.start();o.frequency.exponentialRampToValueAtTime(f*1.4,AC.currentTime+dur);g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);o.stop(AC.currentTime+dur);}
+function crashSound(){if(!AC)return;const o=AC.createOscillator(),g=AC.createGain();o.type='sawtooth';o.frequency.value=180;g.gain.value=0.3;o.connect(g);g.connect(master);o.start();o.frequency.exponentialRampToValueAtTime(35,AC.currentTime+0.5);g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+0.55);o.stop(AC.currentTime+0.55);}
+function thunder(){if(!AC)return;const buf=AC.createBuffer(1,AC.sampleRate*0.9,AC.sampleRate);const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.exp(-i/(AC.sampleRate*0.18));const s=AC.createBufferSource(),g=AC.createGain();s.buffer=buf;g.gain.value=0.4;s.connect(g);g.connect(master);s.start();}
 
 // ---------- LEADERBOARD ----------
 function loadLB(){try{return JSON.parse(localStorage.getItem('motoCoast_lb')||'[]');}catch(e){return[];}}
