@@ -206,6 +206,7 @@ input[type=range]{width:120px;accent-color:#ffd23a}
   <div class="wallet">◎ <span class="walletVal">0</span> <small>COINS</small></div>
   <div class="menurow">
     <button class="menubtn" id="garageBtn">GARAGE</button>
+    <button class="menubtn" id="worldBtn">WORLDS</button>
     <button class="menubtn" id="shopBtn">UPGRADES</button>
     <button class="menubtn" id="setBtn">SETTINGS</button>
   </div>
@@ -242,6 +243,13 @@ input[type=range]{width:120px;accent-color:#ffd23a}
   <div class="wallet">◎ <span class="walletVal">0</span> <small>COINS</small></div>
   <div class="cardlist" id="bikeList"></div>
   <button class="bigbtn panel-back" data-panel="garage">BACK</button>
+</div>
+
+<div class="panel hidden" id="worlds">
+  <h2>WORLDS</h2>
+  <div class="wallet">◎ <span class="walletVal">0</span> <small>COINS</small></div>
+  <div class="cardlist" id="worldList"></div>
+  <button class="bigbtn panel-back" data-panel="worlds">BACK</button>
 </div>
 
 <div class="panel hidden" id="shop">
@@ -324,19 +332,15 @@ camera.position.set(0,4.2,9);
 camera.lookAt(0,1.4,-18);
 
 // ---------- SUNSET SKY ----------
-function makeSkyTex(){
+const SKY_COAST=['#241a4a','#5a3a7a','#c85a6a','#ff8a4a','#ffc06a','#ffe7a8'];
+function makeSkyTex(stops){
+  const list=stops||SKY_COAST;
   const c=document.createElement('canvas');c.width=16;c.height=256;
   const g=c.getContext('2d');
   const grd=g.createLinearGradient(0,0,0,256);
-  grd.addColorStop(0.0,'#241a4a');   // high dusk
-  grd.addColorStop(0.32,'#5a3a7a');
-  grd.addColorStop(0.55,'#c85a6a');
-  grd.addColorStop(0.74,'#ff8a4a');
-  grd.addColorStop(0.88,'#ffc06a');
-  grd.addColorStop(1.0,'#ffe7a8');   // horizon glow
+  list.forEach((col,i)=>grd.addColorStop(i/(list.length-1),col));
   g.fillStyle=grd;g.fillRect(0,0,16,256);
-  const t=new THREE.CanvasTexture(c);
-  return t;
+  return new THREE.CanvasTexture(c);
 }
 const skyGeo=new THREE.SphereGeometry(320,32,20);
 const skyMat=new THREE.MeshBasicMaterial({map:makeSkyTex(),side:THREE.BackSide,fog:false,depthWrite:false});
@@ -398,6 +402,9 @@ const wet=new THREE.Mesh(new THREE.PlaneGeometry(ROAD_W,440),wetMat);wet.rotatio
 // ground (inland grass/dirt strip on the left, dark)
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(120,440),new THREE.MeshStandardMaterial({color:0x4a5a28,roughness:1}));
 ground.rotation.x=-Math.PI/2;ground.position.set(-66,-0.05,-100);scene.add(ground);
+// the coast has sea on the right; every inland biome needs land there instead
+const groundR=new THREE.Mesh(new THREE.PlaneGeometry(120,440),new THREE.MeshStandardMaterial({color:0x4a5a28,roughness:1}));
+groundR.rotation.x=-Math.PI/2;groundR.position.set(66,-0.05,-100);groundR.visible=false;scene.add(groundR);
 
 // ---------- BEACH ----------
 const beach=new THREE.Mesh(new THREE.PlaneGeometry(10,440),new THREE.MeshStandardMaterial({color:0xe6cf94,roughness:1}));
@@ -434,42 +441,218 @@ scene.add(glitter);
 function blobShadow(r){const m=new THREE.Mesh(new THREE.CircleGeometry(r,16),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.38}));m.rotation.x=-Math.PI/2;m.position.y=0.02;return m;}
 
 // ---------- BIKE ----------
+// Six machines with genuinely different silhouettes, not one mesh recoloured.
+// Everything hangs off bikeBody, which buildBike() empties and refills; the
+// shadow, headlight aim target and shield bubble live on `bike` so they survive.
 const bike=new THREE.Group();scene.add(bike);
 const bikeBody=new THREE.Group();bike.add(bikeBody);
-function makeWheel(){
+const headTarget=new THREE.Object3D();headTarget.position.set(0,0,-30);bike.add(headTarget);
+
+const frameMat=new THREE.MeshStandardMaterial({color:0x222933,metalness:0.6,roughness:0.4});
+const redMat=new THREE.MeshStandardMaterial({color:0xe01500,metalness:0.5,roughness:0.3,emissive:0x330600,emissiveIntensity:0.3});
+const darkMat=new THREE.MeshStandardMaterial({color:0x0a0a0a,roughness:0.9});
+const chromeMat=new THREE.MeshStandardMaterial({color:0xcfd4dc,metalness:0.95,roughness:0.15});
+const suitMat=new THREE.MeshStandardMaterial({color:0x161b30,roughness:0.6,metalness:0.2});
+const glassMat=new THREE.MeshStandardMaterial({color:0x223044,metalness:0.9,roughness:0.08,transparent:true,opacity:0.55});
+const glowMat=new THREE.MeshBasicMaterial({color:0x19e6d6});
+
+// live handles the render loop reaches for; reassigned on every rebuild
+let wheelF,wheelR,flame,flame2,taillight,headlight,headSpot;
+
+function makeWheel(r,tyre,spokes,solid){
   const g=new THREE.Group();
-  const tg=new THREE.TorusGeometry(0.55,0.18,12,24);tg.rotateY(Math.PI/2);
-  g.add(new THREE.Mesh(tg,new THREE.MeshStandardMaterial({color:0x111111,roughness:0.8})));
-  const rg=new THREE.TorusGeometry(0.34,0.05,8,20);rg.rotateY(Math.PI/2);
-  g.add(new THREE.Mesh(rg,new THREE.MeshStandardMaterial({color:0xdddddd,metalness:0.9,roughness:0.2})));
-  for(let i=0;i<5;i++){const s=new THREE.Mesh(new THREE.BoxGeometry(0.04,0.66,0.04),new THREE.MeshStandardMaterial({color:0xaaaaaa,metalness:0.7,roughness:0.3}));s.rotation.x=(i/5)*Math.PI;g.add(s);}
+  const tg=new THREE.TorusGeometry(r,tyre,10,22);tg.rotateY(Math.PI/2);
+  g.add(new THREE.Mesh(tg,new THREE.MeshStandardMaterial({color:0x111111,roughness:0.85})));
+  if(solid){
+    const d=new THREE.CylinderGeometry(r*0.82,r*0.82,0.09,20);d.rotateZ(Math.PI/2);
+    g.add(new THREE.Mesh(d,chromeMat));
+    const ring=new THREE.TorusGeometry(r*0.5,0.05,8,20);ring.rotateY(Math.PI/2);
+    const rm=new THREE.Mesh(ring,glowMat);g.add(rm);
+  }else{
+    const rg=new THREE.TorusGeometry(r*0.62,0.05,8,18);rg.rotateY(Math.PI/2);
+    g.add(new THREE.Mesh(rg,chromeMat));
+    for(let i=0;i<spokes;i++){
+      const sp=new THREE.Mesh(new THREE.BoxGeometry(0.04,r*1.2,0.04),chromeMat);
+      sp.rotation.x=(i/spokes)*Math.PI;g.add(sp);
+    }
+  }
   return g;
 }
-const wheelF=makeWheel();wheelF.position.set(0,0.55,-1.15);
-const wheelR=makeWheel();wheelR.position.set(0,0.55,1.05);
-bikeBody.add(wheelF,wheelR);
-const frameMat=new THREE.MeshStandardMaterial({color:0x222933,metalness:0.6,roughness:0.4});
-const frame=new THREE.Mesh(new THREE.BoxGeometry(0.18,0.18,2.2),frameMat);frame.position.set(0,0.85,0);bikeBody.add(frame);
-const redMat=new THREE.MeshStandardMaterial({color:0xe01500,metalness:0.5,roughness:0.3,emissive:0x330600,emissiveIntensity:0.3});
-const tank=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.42,1.0),redMat);tank.position.set(0,1.12,0.1);bikeBody.add(tank);
-const fairing=new THREE.Mesh(new THREE.ConeGeometry(0.42,1.1,12),redMat);fairing.rotation.x=Math.PI/2;fairing.position.set(0,0.95,-1.0);bikeBody.add(fairing);
-const tailB=new THREE.Mesh(new THREE.BoxGeometry(0.36,0.3,0.7),redMat);tailB.position.set(0,1.1,0.95);bikeBody.add(tailB);
-const seat=new THREE.Mesh(new THREE.BoxGeometry(0.42,0.16,0.9),new THREE.MeshStandardMaterial({color:0x0a0a0a,roughness:0.9}));seat.position.set(0,1.28,0.55);bikeBody.add(seat);
-const bar=new THREE.Mesh(new THREE.BoxGeometry(0.9,0.07,0.07),frameMat);bar.position.set(0,1.35,-0.75);bikeBody.add(bar);
-const headlight=new THREE.Mesh(new THREE.SphereGeometry(0.18,12,12),new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xfff0c0,emissiveIntensity:1.5}));headlight.position.set(0,1.0,-1.5);bikeBody.add(headlight);
-const headSpot=new THREE.SpotLight(0xfff0c0,1.1,55,Math.PI/5,0.5,1.2);headSpot.position.set(0,1.2,-1.4);
-const headTarget=new THREE.Object3D();headTarget.position.set(0,0,-30);bike.add(headTarget);headSpot.target=headTarget;bikeBody.add(headSpot);
-const taillight=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.1,0.06),new THREE.MeshStandardMaterial({color:0xff0000,emissive:0xff0000,emissiveIntensity:2}));taillight.position.set(0,1.12,1.32);bikeBody.add(taillight);
-// rider
-const suitMat=new THREE.MeshStandardMaterial({color:0x161b30,roughness:0.6,metalness:0.2});
-const torso=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.7,0.45),suitMat);torso.position.set(0,1.75,0.4);torso.rotation.x=0.35;bikeBody.add(torso);
-const helmet=new THREE.Mesh(new THREE.SphereGeometry(0.27,16,16),new THREE.MeshStandardMaterial({color:0xe8e8e8,roughness:0.25,metalness:0.4}));helmet.position.set(0,2.18,0.18);bikeBody.add(helmet);
-const visor=new THREE.Mesh(new THREE.SphereGeometry(0.22,16,16,0,Math.PI,0,Math.PI/2),new THREE.MeshStandardMaterial({color:0x221a0a,emissive:0x442200,emissiveIntensity:0.5,metalness:0.95,roughness:0.05}));visor.position.set(0,2.16,0.18);visor.rotation.x=Math.PI/2;visor.rotation.y=Math.PI;bikeBody.add(visor);
-const armL=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.6,0.16),suitMat);armL.position.set(-0.32,1.7,0.0);armL.rotation.x=0.9;const armR=armL.clone();armR.position.x=0.32;bikeBody.add(armL,armR);
-const legL=new THREE.Mesh(new THREE.BoxGeometry(0.18,0.6,0.18),suitMat);legL.position.set(-0.22,1.2,0.7);legL.rotation.x=-0.5;const legR=legL.clone();legR.position.x=0.22;bikeBody.add(legL,legR);
-// nitro flames
-const flame=new THREE.Mesh(new THREE.ConeGeometry(0.3,1.6,12),new THREE.MeshBasicMaterial({color:0x00ffd0,transparent:true,opacity:0.85,depthWrite:false}));flame.rotation.x=Math.PI/2;flame.position.set(0,0.85,1.7);flame.visible=false;bikeBody.add(flame);
-const flame2=new THREE.Mesh(new THREE.ConeGeometry(0.45,1.0,12),new THREE.MeshBasicMaterial({color:0xff7a00,transparent:true,opacity:0.7,depthWrite:false}));flame2.rotation.x=Math.PI/2;flame2.position.set(0,0.85,1.5);flame2.visible=false;bikeBody.add(flame2);
+function box(w,h,d,mat,x,y,z){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);bikeBody.add(m);return m;}
+function cyl(rt,rb,h,mat,x,y,z,rx,rz){const m=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,10),mat);m.position.set(x,y,z);if(rx)m.rotation.x=rx;if(rz)m.rotation.z=rz;bikeBody.add(m);return m;}
+function forks(x,yTop,yBot,z,tilt){
+  for(const sx of [-x,x]){
+    const len=yTop-yBot;
+    const f=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.08,len,8),chromeMat);
+    f.position.set(sx,(yTop+yBot)/2,z);f.rotation.x=tilt;bikeBody.add(f);
+  }
+}
+// rider posed from a few numbers so each bike sits its rider differently
+function addRider(cfg){
+  const torso=box(0.5,0.72,0.44,suitMat,0,cfg.y,cfg.z);torso.rotation.x=cfg.lean;
+  const hy=cfg.y+0.44*Math.cos(cfg.lean)+0.1, hz=cfg.z-0.42*Math.sin(cfg.lean);
+  const helmet=new THREE.Mesh(new THREE.SphereGeometry(0.27,14,14),new THREE.MeshStandardMaterial({color:0xe8e8e8,roughness:0.25,metalness:0.4}));
+  helmet.position.set(0,hy,hz);bikeBody.add(helmet);
+  const visor=new THREE.Mesh(new THREE.SphereGeometry(0.22,14,14,0,Math.PI,0,Math.PI/2),new THREE.MeshStandardMaterial({color:0x221a0a,emissive:0x442200,emissiveIntensity:0.5,metalness:0.95,roughness:0.05}));
+  visor.position.set(0,hy-0.02,hz);visor.rotation.x=Math.PI/2;visor.rotation.y=Math.PI;bikeBody.add(visor);
+  for(const sx of [-1,1]){
+    const arm=box(0.15,0.62,0.15,suitMat,sx*cfg.armX,cfg.y-0.05,cfg.z-0.36);
+    arm.rotation.x=cfg.armAng;arm.rotation.z=sx*-0.14;
+    const leg=box(0.18,0.6,0.18,suitMat,sx*0.22,cfg.y-0.58,cfg.z+cfg.legZ);
+    leg.rotation.x=cfg.legAng;
+  }
+}
+function addFlames(y,z,big){
+  flame=new THREE.Mesh(new THREE.ConeGeometry(0.3,1.6,10),new THREE.MeshBasicMaterial({color:0x00ffd0,transparent:true,opacity:0.85,depthWrite:false}));
+  flame.rotation.x=Math.PI/2;flame.position.set(0,y,z+0.2);flame.visible=false;bikeBody.add(flame);
+  flame2=new THREE.Mesh(new THREE.ConeGeometry(big?0.5:0.45,1.0,10),new THREE.MeshBasicMaterial({color:0xff7a00,transparent:true,opacity:0.7,depthWrite:false}));
+  flame2.rotation.x=Math.PI/2;flame2.position.set(0,y,z);flame2.visible=false;bikeBody.add(flame2);
+}
+function addLights(hy,hz,shape,ty,tz,tw){
+  if(shape==='strip')headlight=box(0.52,0.09,0.12,new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xd8f4ff,emissiveIntensity:1.6}),0,hy,hz);
+  else if(shape==='twin'){
+    headlight=box(0.2,0.14,0.1,new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xfff0c0,emissiveIntensity:1.5}),-0.13,hy,hz);
+    box(0.2,0.14,0.1,headlight.material,0.13,hy+0.1,hz);
+  }else if(shape==='square')headlight=box(0.38,0.28,0.12,new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xfff0c0,emissiveIntensity:1.5}),0,hy,hz);
+  else{
+    headlight=new THREE.Mesh(new THREE.SphereGeometry(0.2,12,12),new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xfff0c0,emissiveIntensity:1.5}));
+    headlight.position.set(0,hy,hz);bikeBody.add(headlight);
+  }
+  headSpot=new THREE.SpotLight(0xfff0c0,1.1,55,Math.PI/5,0.5,1.2);
+  headSpot.position.set(0,hy+0.2,hz+0.1);headSpot.target=headTarget;bikeBody.add(headSpot);
+  taillight=box(tw||0.3,0.1,0.06,new THREE.MeshStandardMaterial({color:0xff0000,emissive:0xff0000,emissiveIntensity:2}),0,ty,tz);
+}
+function pipe(sx,y,z,len,r){
+  const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r*1.1,len,8),chromeMat);
+  m.position.set(sx,y,z);m.rotation.x=Math.PI/2;bikeBody.add(m);return m;
+}
+
+function buildBike(id){
+  while(bikeBody.children.length)bikeBody.remove(bikeBody.children[0]);
+  switch(id){
+
+  case 'neon': {           // sport bike: full fairing, clip-ons, deep tuck
+    wheelF=makeWheel(0.54,0.17,5);wheelF.position.set(0,0.54,-1.18);
+    wheelR=makeWheel(0.54,0.19,5);wheelR.position.set(0,0.54,1.06);
+    bikeBody.add(wheelF,wheelR);
+    forks(0.17,1.1,0.6,-1.15,0.42);
+    box(0.16,0.16,2.1,frameMat,0,0.86,0);
+    const nose=new THREE.Mesh(new THREE.ConeGeometry(0.44,1.3,12),redMat);
+    nose.rotation.x=Math.PI/2;nose.position.set(0,1.0,-1.12);bikeBody.add(nose);
+    for(const sx of [-1,1])box(0.12,0.62,1.1,redMat,sx*0.34,0.92,-0.55);   // fairing sides
+    const scr=box(0.34,0.26,0.1,glassMat,0,1.32,-1.25);scr.rotation.x=-0.55;
+    box(0.48,0.4,0.95,redMat,0,1.14,0.05);                                  // tank
+    box(0.3,0.44,0.28,darkMat,0,0.62,0.3);                                  // belly pan
+    box(0.34,0.26,0.75,redMat,0,1.24,0.95);                                 // sharp tail
+    box(0.4,0.14,0.8,darkMat,0,1.3,0.5);                                    // seat
+    for(const sx of [-1,1]){const b=box(0.34,0.06,0.06,frameMat,sx*0.28,1.16,-0.72);b.rotation.z=sx*0.1;}
+    pipe(0,1.05,1.35,0.5,0.1);                                              // underseat can
+    addLights(1.16,-1.5,'twin',1.3,1.32,0.26);
+    addRider({y:1.66,z:0.42,lean:0.62,armX:0.3,armAng:1.05,legZ:0.5,legAng:-0.75});
+    addFlames(1.05,1.6);
+    break; }
+
+  case 'dune': {           // adventure: tall, knobby, upright, luggage
+    wheelF=makeWheel(0.68,0.24,6);wheelF.position.set(0,0.68,-1.3);
+    wheelR=makeWheel(0.62,0.24,6);wheelR.position.set(0,0.62,1.12);
+    bikeBody.add(wheelF,wheelR);
+    forks(0.2,1.62,0.75,-1.28,0.3);
+    box(0.18,0.2,2.2,frameMat,0,1.08,0);
+    box(0.5,0.5,1.0,redMat,0,1.42,0.0);                                     // big tank
+    const beak=box(0.34,0.12,0.8,redMat,0,1.36,-1.35);beak.rotation.x=0.25; // front beak
+    box(0.44,0.1,0.5,darkMat,0,1.24,-1.05);
+    box(0.44,0.16,0.95,darkMat,0,1.6,0.62);                                 // tall seat
+    for(const sx of [-1,1])box(0.22,0.42,0.6,frameMat,sx*0.46,1.2,1.05);    // panniers
+    box(1.06,0.07,0.07,frameMat,0,1.78,-0.86);                              // wide bars
+    cyl(0.09,0.09,0.7,chromeMat,0.34,1.15,1.15,Math.PI/2.6);                // raised exhaust
+    box(0.36,0.5,0.06,glassMat,0,1.95,-1.12);                               // screen
+    addLights(1.62,-1.42,'square',1.5,1.5,0.3);
+    addRider({y:2.02,z:0.35,lean:0.12,armX:0.36,armAng:0.72,legZ:0.42,legAng:-0.35});
+    addFlames(1.15,1.5);
+    break; }
+
+  case 'roadster': {       // cruiser: long, low, wide bars, twin pipes
+    wheelF=makeWheel(0.7,0.2,7);wheelF.position.set(0,0.7,-1.62);
+    wheelR=makeWheel(0.58,0.26,7);wheelR.position.set(0,0.58,1.26);
+    bikeBody.add(wheelF,wheelR);
+    forks(0.22,1.28,0.72,-1.58,0.55);
+    box(0.2,0.16,2.6,frameMat,0,0.8,-0.1);
+    const tank=new THREE.Mesh(new THREE.SphereGeometry(0.44,14,12),redMat);
+    tank.scale.set(0.62,0.7,1.25);tank.position.set(0,1.06,-0.15);bikeBody.add(tank);
+    cyl(0.3,0.3,0.52,chromeMat,0,0.72,0.15,0,Math.PI/2);                    // v-twin barrel
+    box(0.52,0.14,1.0,darkMat,0,0.98,0.62);                                 // low slung seat
+    box(0.42,0.1,0.62,redMat,0,1.02,1.28);                                  // rear fender
+    const ff=box(0.36,0.1,0.72,redMat,0,1.16,-1.62);ff.rotation.x=0.12;     // front fender
+    box(1.18,0.07,0.07,chromeMat,0,1.34,-1.22);                             // wide pullback bars
+    pipe(0.34,0.5,0.75,1.5,0.08);pipe(0.44,0.66,0.8,1.5,0.08);              // twin shotguns
+    addLights(1.2,-1.78,'round',1.05,1.6,0.34);
+    addRider({y:1.56,z:0.5,lean:-0.1,armX:0.42,armAng:0.5,legZ:-0.05,legAng:-1.15});
+    addFlames(0.62,1.62);
+    break; }
+
+  case 'phantom': {        // superbike: aero fairing, winglets, twin cans
+    wheelF=makeWheel(0.56,0.18,5);wheelF.position.set(0,0.56,-1.2);
+    wheelR=makeWheel(0.56,0.22,5);wheelR.position.set(0,0.56,1.08);
+    bikeBody.add(wheelF,wheelR);
+    forks(0.18,1.1,0.62,-1.18,0.4);
+    box(0.16,0.16,2.1,frameMat,0,0.86,0);
+    const nose=new THREE.Mesh(new THREE.ConeGeometry(0.46,1.5,14),redMat);
+    nose.rotation.x=Math.PI/2;nose.position.set(0,1.02,-1.2);bikeBody.add(nose);
+    for(const sx of [-1,1]){
+      box(0.13,0.66,1.25,redMat,sx*0.35,0.92,-0.5);                         // fairing
+      const wing=box(0.3,0.05,0.26,darkMat,sx*0.46,1.12,-1.02);             // winglet
+      wing.rotation.z=sx*-0.22;
+    }
+    const scr=box(0.32,0.24,0.09,glassMat,0,1.34,-1.34);scr.rotation.x=-0.6;
+    box(0.48,0.4,0.95,redMat,0,1.14,0.05);
+    box(0.34,0.5,0.3,darkMat,0,0.6,0.28);                                   // belly
+    box(0.3,0.24,0.8,redMat,0,1.28,1.0);                                    // tail
+    box(0.4,0.13,0.75,darkMat,0,1.32,0.52);
+    for(const sx of [-1,1]){const b=box(0.32,0.06,0.06,frameMat,sx*0.28,1.12,-0.76);b.rotation.z=sx*0.12;}
+    pipe(-0.16,1.08,1.4,0.55,0.09);pipe(0.16,1.08,1.4,0.55,0.09);           // twin underseat
+    addLights(1.18,-1.56,'twin',1.36,1.38,0.24);
+    addRider({y:1.6,z:0.44,lean:0.75,armX:0.29,armAng:1.15,legZ:0.52,legAng:-0.85});
+    addFlames(1.08,1.66,true);
+    break; }
+
+  case 'volt': {           // electric: sculpted shell, light strips, no pipes
+    wheelF=makeWheel(0.62,0.19,0,true);wheelF.position.set(0,0.62,-1.22);
+    wheelR=makeWheel(0.62,0.22,0,true);wheelR.position.set(0,0.62,1.1);
+    bikeBody.add(wheelF,wheelR);
+    forks(0.19,1.16,0.7,-1.2,0.36);
+    const shell=new THREE.Mesh(new THREE.SphereGeometry(0.5,16,12),redMat);
+    shell.scale.set(0.68,0.72,2.05);shell.position.set(0,1.06,-0.12);bikeBody.add(shell);
+    for(const sx of [-1,1])box(0.05,0.1,1.5,glowMat,sx*0.35,1.04,-0.15);    // energy strips
+    box(0.4,0.13,0.8,darkMat,0,1.3,0.5);
+    box(0.3,0.3,0.7,redMat,0,1.2,0.98);                                     // tail pod
+    box(0.34,0.07,0.05,glowMat,0,1.28,1.34);                                // rear light bar
+    for(const sx of [-1,1]){const b=box(0.3,0.06,0.06,chromeMat,sx*0.3,1.2,-0.8);b.rotation.z=sx*0.1;}
+    const scr=box(0.3,0.22,0.08,glassMat,0,1.42,-1.16);scr.rotation.x=-0.5;
+    addLights(1.18,-1.44,'strip',1.28,1.36,0.3);
+    addRider({y:1.7,z:0.4,lean:0.5,armX:0.31,armAng:0.95,legZ:0.46,legAng:-0.62});
+    addFlames(1.02,1.62);
+    break; }
+
+  default: {               // 'street' : naked standard, exposed engine
+    wheelF=makeWheel(0.55,0.18,5);wheelF.position.set(0,0.55,-1.15);
+    wheelR=makeWheel(0.55,0.2,5);wheelR.position.set(0,0.55,1.05);
+    bikeBody.add(wheelF,wheelR);
+    forks(0.18,1.2,0.62,-1.13,0.35);
+    box(0.18,0.18,2.2,frameMat,0,0.85,0);
+    cyl(0.26,0.26,0.5,frameMat,0,0.7,0.1,0,Math.PI/2);                      // engine block
+    box(0.5,0.44,1.0,redMat,0,1.14,0.05);                                   // tank
+    box(0.42,0.15,0.9,darkMat,0,1.28,0.58);                                 // seat
+    box(0.34,0.28,0.6,redMat,0,1.14,1.0);                                   // tail
+    box(0.94,0.07,0.07,frameMat,0,1.4,-0.78);                               // upright bars
+    pipe(0.28,0.56,0.9,1.3,0.09);                                           // single pipe
+    addLights(1.06,-1.44,'round',1.14,1.34,0.3);
+    addRider({y:1.78,z:0.4,lean:0.3,armX:0.33,armAng:0.85,legZ:0.46,legAng:-0.5});
+    addFlames(0.86,1.6);
+    break; }
+  }
+}
+let builtBike='street';
+buildBike(builtBike);
 bike.add(blobShadow(1.4));
 
 // ---------- OBSTACLES ----------
@@ -570,12 +753,14 @@ function renderBuffs(){
 }
 
 // ---------- TIME OF DAY ----------
+// Time of day is a *tint* rather than a fixed palette, so it can be layered
+// over whichever biome is loaded instead of overwriting its colours.
 const TOD=[
-  {t:0.00,fog:0xf2a572,hemi:0.75,sun:1.35,sky:0xffffff,star:0.14,head:1.0},
-  {t:0.28,fog:0x161636,hemi:0.24,sun:0.18,sky:0x44528f,star:1.00,head:2.5},
-  {t:0.52,fog:0x3a3a6a,hemi:0.38,sun:0.48,sky:0x7788bb,star:0.60,head:1.9},
-  {t:0.78,fog:0xffc9a0,hemi:0.85,sun:1.30,sky:0xffe0c0,star:0.08,head:1.0},
-  {t:1.00,fog:0xf2a572,hemi:0.75,sun:1.35,sky:0xffffff,star:0.14,head:1.0}
+  {t:0.00,tint:0xffffff,hemi:0.75,sun:1.35,star:0.14,head:1.0},
+  {t:0.28,tint:0x39456f,hemi:0.24,sun:0.18,star:1.00,head:2.5},
+  {t:0.52,tint:0x6f7aa8,hemi:0.38,sun:0.48,star:0.60,head:1.9},
+  {t:0.78,tint:0xffd9b4,hemi:0.85,sun:1.30,star:0.08,head:1.0},
+  {t:1.00,tint:0xffffff,hemi:0.75,sun:1.35,star:0.14,head:1.0}
 ];
 const todA=new THREE.Color(),todB=new THREE.Color();
 function applyTOD(){
@@ -583,15 +768,16 @@ function applyTOD(){
   let a=TOD[0],b=TOD[1];
   for(let i=0;i<TOD.length-1;i++){if(t>=TOD[i].t&&t<=TOD[i+1].t){a=TOD[i];b=TOD[i+1];break;}}
   const k=(t-a.t)/Math.max(1e-6,b.t-a.t);
-  scene.fog.color.copy(todA.setHex(a.fog)).lerp(todB.setHex(b.fog),k);
-  skyMat.color.copy(todA.setHex(a.sky)).lerp(todB.setHex(b.sky),k);
+  const tint=todA.setHex(a.tint).lerp(todB.setHex(b.tint),k);
+  scene.fog.color.copy(BIOME_FOG).multiply(tint);
+  skyMat.color.copy(tint);
   G.todHemi=a.hemi+(b.hemi-a.hemi)*k;
   sun.intensity=a.sun+(b.sun-a.sun)*k;
   const star=a.star+(b.star-a.star)*k;
   starMat.opacity=star;
   headSpot.intensity=a.head+(b.head-a.head)*k;
   headlight.material.emissiveIntensity=1.0+star*1.6;
-  sunDisk.visible=star<0.55;
+  sunDisk.visible=star<0.55&&BIOME.id!=='neon';
   glowSprite.material.opacity=Math.max(0,1-star*1.35);
 }
 
@@ -628,14 +814,243 @@ function makeLamp(side){
   const pl=new THREE.PointLight(0xffcc66,0.7,16);pl.position.set(side*1.2,5.8,0);g.add(pl);
   g.userData.type='lamp';return g;
 }
+// ---------- DESERT PROPS ----------
+function makeCactus(){
+  const g=new THREE.Group();
+  const m=new THREE.MeshStandardMaterial({color:0x2f6b3a,roughness:0.95});
+  const h=2.2+Math.random()*2.2;
+  const trunk=new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.36,h,8),m);trunk.position.y=h/2;g.add(trunk);
+  for(const sx of [-1,1]){
+    if(Math.random()<0.65){
+      const ah=0.8+Math.random()*0.9,ay=h*(0.45+Math.random()*0.3);
+      const arm=new THREE.Mesh(new THREE.CylinderGeometry(0.18,0.2,ah,7),m);
+      arm.position.set(sx*0.5,ay,0);arm.rotation.z=sx*-1.1;g.add(arm);
+      const up=new THREE.Mesh(new THREE.CylinderGeometry(0.17,0.18,ah*0.9,7),m);
+      up.position.set(sx*0.85,ay+ah*0.5,0);g.add(up);
+    }
+  }
+  g.userData.type='cactus';return g;
+}
+function makeMesa(){
+  const g=new THREE.Group();
+  const h=5+Math.random()*9,r=3+Math.random()*4;
+  const bands=[0x8a5a3a,0xa8714a,0xc08a5a];
+  for(let i=0;i<3;i++){
+    const seg=new THREE.Mesh(new THREE.CylinderGeometry(r*(1-i*0.12),r*(1-i*0.08),h/3,7),
+      new THREE.MeshStandardMaterial({color:bands[i],roughness:1,flatShading:true}));
+    seg.position.y=h/6+i*(h/3);g.add(seg);
+  }
+  g.userData.type='mesa';return g;
+}
+function makeBoulder(){
+  const s=0.9+Math.random()*2.2;
+  const m=new THREE.Mesh(new THREE.DodecahedronGeometry(s,0),
+    new THREE.MeshStandardMaterial({color:new THREE.Color().setHSL(0.07,0.34,0.34+Math.random()*0.1),roughness:1,flatShading:true}));
+  m.position.y=s*0.55;m.rotation.set(Math.random(),Math.random(),Math.random());
+  const g=new THREE.Group();g.add(m);g.userData.type='boulder';return g;
+}
+function makeDeadBush(){
+  const g=new THREE.Group();
+  const m=new THREE.MeshStandardMaterial({color:0x7a6540,roughness:1,flatShading:true});
+  for(let i=0;i<4;i++){
+    const b=new THREE.Mesh(new THREE.ConeGeometry(0.34,0.8,5),m);
+    b.position.set((Math.random()-0.5)*0.7,0.4,(Math.random()-0.5)*0.7);
+    b.rotation.z=(Math.random()-0.5)*0.7;g.add(b);
+  }
+  g.userData.type='bush';return g;
+}
+
+// ---------- ALPINE PROPS ----------
+function makePine(){
+  const g=new THREE.Group();
+  const h=3.5+Math.random()*3.5;
+  g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.16,0.24,h*0.32,6),
+    new THREE.MeshStandardMaterial({color:0x4a3524,roughness:1})).translateY(h*0.16));
+  const nm=new THREE.MeshStandardMaterial({color:0x1e4a32,roughness:0.95,flatShading:true});
+  const sm=new THREE.MeshStandardMaterial({color:0xeef4fa,roughness:0.85,flatShading:true});
+  for(let i=0;i<3;i++){
+    const r=1.05-i*0.26,ch=h*0.34;
+    const cone=new THREE.Mesh(new THREE.ConeGeometry(r,ch,7),nm);
+    cone.position.y=h*0.28+i*ch*0.62;g.add(cone);
+    const cap=new THREE.Mesh(new THREE.ConeGeometry(r*0.52,ch*0.42,7),sm);
+    cap.position.y=h*0.28+i*ch*0.62+ch*0.32;g.add(cap);
+  }
+  g.userData.type='pine';return g;
+}
+function makePeak(){
+  const g=new THREE.Group();
+  const h=12+Math.random()*16,r=5+Math.random()*5;
+  g.add(new THREE.Mesh(new THREE.ConeGeometry(r,h,6),
+    new THREE.MeshStandardMaterial({color:0x54607a,roughness:1,flatShading:true})).translateY(h/2));
+  const cap=new THREE.Mesh(new THREE.ConeGeometry(r*0.44,h*0.34,6),
+    new THREE.MeshStandardMaterial({color:0xf2f7fc,roughness:0.8,flatShading:true}));
+  cap.position.y=h*0.83;g.add(cap);
+  g.userData.type='peak';return g;
+}
+function makeSnowBank(){
+  const g=new THREE.Group();
+  const s=1.2+Math.random()*2;
+  const m=new THREE.Mesh(new THREE.SphereGeometry(s,8,6,0,Math.PI*2,0,Math.PI/2.2),
+    new THREE.MeshStandardMaterial({color:0xe8f0f8,roughness:0.9,flatShading:true}));
+  m.scale.set(1.5,0.5,1);g.add(m);g.userData.type='snow';return g;
+}
+
+// ---------- NEON CITY PROPS ----------
+let winTex=null;
+function windowTex(){
+  if(winTex)return winTex;
+  const c=document.createElement('canvas');c.width=64;c.height=128;
+  const g=c.getContext('2d');
+  g.fillStyle='#0a0a14';g.fillRect(0,0,64,128);
+  const tints=['#ffd88a','#9fe4ff','#ffffff','#ffb0d8'];
+  for(let y=4;y<128;y+=8)for(let x=4;x<64;x+=10){
+    if(Math.random()<0.55){
+      g.fillStyle=tints[Math.floor(Math.random()*tints.length)];
+      g.globalAlpha=0.5+Math.random()*0.5;
+      g.fillRect(x,y,6,4);
+    }
+  }
+  g.globalAlpha=1;
+  winTex=new THREE.CanvasTexture(c);
+  winTex.wrapS=winTex.wrapT=THREE.RepeatWrapping;
+  return winTex;
+}
+function makeTower(){
+  const g=new THREE.Group();
+  const h=14+Math.random()*30,w=3+Math.random()*3.5;
+  const tex=windowTex().clone();tex.needsUpdate=true;
+  tex.repeat.set(Math.max(1,Math.round(w/2)),Math.max(2,Math.round(h/5)));
+  const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,w),
+    new THREE.MeshStandardMaterial({color:0x2a2a3e,roughness:0.75,map:tex,emissive:0xffffff,emissiveMap:tex,emissiveIntensity:0.85}));
+  m.position.y=h/2;g.add(m);
+  // roof beacon
+  const b=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.3,0.3),new THREE.MeshBasicMaterial({color:0xff3355}));
+  b.position.y=h+0.3;g.add(b);
+  g.userData.type='tower';return g;
+}
+function makeNeonSign(){
+  const g=new THREE.Group();
+  const cols=[0xff2d6b,0x19e6d6,0xffd23a,0x9b5cff,0x33ff88];
+  const c=cols[Math.floor(Math.random()*cols.length)];
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.12,5,6),
+    new THREE.MeshStandardMaterial({color:0x2a2a34,metalness:0.6,roughness:0.5}));
+  pole.position.y=2.5;g.add(pole);
+  const panel=new THREE.Mesh(new THREE.BoxGeometry(2.2,1.1,0.14),new THREE.MeshBasicMaterial({color:c}));
+  panel.position.y=5.4;g.add(panel);
+  const frame=new THREE.Mesh(new THREE.BoxGeometry(2.5,1.4,0.1),
+    new THREE.MeshStandardMaterial({color:0x14141c,roughness:0.8}));
+  frame.position.set(0,5.4,-0.08);g.add(frame);
+  g.userData.type='sign';return g;
+}
+function makeCityLamp(side){
+  const g=new THREE.Group();
+  const pm=new THREE.MeshStandardMaterial({color:0x33333c,metalness:0.6,roughness:0.45});
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.09,0.11,7,7),pm);pole.position.y=3.5;g.add(pole);
+  const arm=new THREE.Mesh(new THREE.BoxGeometry(1.5,0.1,0.1),pm);arm.position.set(side*0.7,7,0);g.add(arm);
+  const bulb=new THREE.Mesh(new THREE.BoxGeometry(0.55,0.16,0.4),new THREE.MeshBasicMaterial({color:0xcfe8ff}));
+  bulb.position.set(side*1.35,6.9,0);g.add(bulb);
+  g.userData.type='citylamp';return g;
+}
+
+// ---------- BIOMES ----------
+// Each landscape owns its sky, terrain colours, prop mix and placement.
+// `todLock` pins the time of day where a biome only makes sense at one hour.
+const BIOMES=[
+  {id:'coast', name:'SUNSET COASTLINE', cost:0, tag:'The original run',
+   blurb:'Golden hour on a cliff road, palms and surf on your right.',
+   sky:SKY_COAST, fog:0xf2a572, ground:0x4a5a28, verge:0xe6cf94, road:0xffffff,
+   sea:true, rightGround:false, rail:true, railCol:0xb8bcc4, birds:true, todLock:null,
+   step:13, leftMin:9, leftRange:9, rightChance:0.55, rightMin:8, rightRange:3.5,
+   left:()=>{const r=Math.random();return r<0.5?makeCliff():r<0.82?makePalm():makeLamp(-1);},
+   right:()=>makePalm()},
+
+  {id:'desert', name:'CANYON RUN', cost:1500, tag:'Dry heat, big rocks',
+   blurb:'Red mesas and saguaro on an empty highway through the canyon.',
+   sky:['#1e3f78','#4f74a8','#a98b64','#d9ab74','#eccb96','#f6e3bc'],
+   fog:0xe8c48a, ground:0xc09058, verge:0xd8ab72, road:0xf0e2cc,
+   sea:false, rightGround:true, rail:false, railCol:0x9a7a5a, birds:false, todLock:null,
+   step:12, leftMin:9, leftRange:12, rightChance:0.8, rightMin:9, rightRange:12,
+   left:()=>{const r=Math.random();return r<0.32?makeMesa():r<0.62?makeCactus():r<0.85?makeBoulder():makeDeadBush();},
+   right:()=>{const r=Math.random();return r<0.3?makeMesa():r<0.6?makeCactus():r<0.85?makeBoulder():makeDeadBush();}},
+
+  {id:'alpine', name:'ALPINE PASS', cost:3500, tag:'Cold and clean',
+   blurb:'Snowbound pines and granite peaks either side of the pass.',
+   sky:['#12294f','#31517f','#6d8fb4','#a8c6dc','#d8e8f2','#f0f7fb'],
+   fog:0xcfe0ec, ground:0xdce8f2, verge:0xeaf2f8, road:0xd8dce4,
+   sea:false, rightGround:true, rail:true, railCol:0x8a929e, birds:false, todLock:null,
+   step:11, leftMin:8, leftRange:11, rightChance:0.85, rightMin:8, rightRange:11,
+   left:()=>{const r=Math.random();return r<0.52?makePine():r<0.72?makePeak():r<0.9?makeSnowBank():makeLamp(-1);},
+   right:()=>{const r=Math.random();return r<0.55?makePine():r<0.75?makePeak():makeSnowBank();}},
+
+  {id:'neon', name:'NEON CITY', cost:7000, tag:'Always after dark',
+   blurb:'Wet asphalt between glass towers, lit by signs you cannot read.',
+   sky:['#04030c','#0e0820','#231038','#48174e','#7a2358','#a83a5e'],
+   fog:0x2a1040, ground:0x1a1a24, verge:0x2a2a34, road:0x9aa0b0,
+   sea:false, rightGround:true, rail:true, railCol:0x4a4a58, birds:false, todLock:0.28,
+   step:12, leftMin:10, leftRange:9, rightChance:0.9, rightMin:10, rightRange:9,
+   left:()=>{const r=Math.random();return r<0.55?makeTower():r<0.78?makeNeonSign():makeCityLamp(-1);},
+   right:()=>{const r=Math.random();return r<0.58?makeTower():r<0.8?makeNeonSign():makeCityLamp(1);}}
+];
+function biomeDef(id){return BIOMES.find(b=>b.id===id)||BIOMES[0];}
+
 const leftScn=[],rightScn=[];
-for(let z=-200;z<RECYCLE;z+=13){
-  // left (inland): cliffs / palms / lamp
-  const r=Math.random();let L;
-  if(r<0.5)L=makeCliff();else if(r<0.82)L=makePalm();else L=makeLamp(-1);
-  L.position.set(-(9+Math.random()*9),0,z+(Math.random()*6-3));L.rotation.y=Math.random()*Math.PI*2;scene.add(L);leftScn.push(L);
-  // right (sea side): sparse palms on the beach
-  if(Math.random()<0.55){const P=makePalm();P.position.set(8+Math.random()*3.5,0,z+6+(Math.random()*6-3));P.rotation.y=Math.random()*Math.PI*2;P.scale.setScalar(0.85+Math.random()*0.3);scene.add(P);rightScn.push(P);}
+const BIOME_FOG=new THREE.Color(0xf2a572);
+let BIOME=BIOMES[0];
+
+function disposeProp(o){
+  o.traverse(nd=>{
+    if(nd.geometry)nd.geometry.dispose();
+    if(nd.material){
+      const list=Array.isArray(nd.material)?nd.material:[nd.material];
+      list.forEach(m=>{
+        if(m.map)m.map.dispose();
+        if(m.emissiveMap&&m.emissiveMap!==m.map)m.emissiveMap.dispose();
+        m.dispose();
+      });
+    }
+  });
+}
+function clearScenery(arr){
+  arr.forEach(o=>{scene.remove(o);disposeProp(o);});
+  arr.length=0;
+}
+function populateScenery(){
+  clearScenery(leftScn);clearScenery(rightScn);
+  for(let z=-200;z<RECYCLE;z+=BIOME.step){
+    const L=BIOME.left();
+    L.position.set(-(BIOME.leftMin+Math.random()*BIOME.leftRange),0,z+(Math.random()*6-3));
+    L.rotation.y=Math.random()*Math.PI*2;scene.add(L);leftScn.push(L);
+    if(Math.random()<BIOME.rightChance){
+      const R=BIOME.right();
+      R.position.set(BIOME.rightMin+Math.random()*BIOME.rightRange,0,z+6+(Math.random()*6-3));
+      R.rotation.y=Math.random()*Math.PI*2;
+      R.scale.setScalar(0.85+Math.random()*0.3);
+      scene.add(R);rightScn.push(R);
+    }
+  }
+}
+function applyBiome(id){
+  BIOME=biomeDef(id);
+  if(skyMat.map)skyMat.map.dispose();
+  skyMat.map=makeSkyTex(BIOME.sky);skyMat.needsUpdate=true;
+  BIOME_FOG.setHex(BIOME.fog);
+  scene.fog.color.copy(BIOME_FOG);
+  ground.material.color.setHex(BIOME.ground);
+  groundR.material.color.setHex(BIOME.ground);
+  groundR.visible=BIOME.rightGround;
+  beach.material.color.setHex(BIOME.verge);
+  road.material.color.setHex(BIOME.road);
+  sea.visible=BIOME.sea;
+  glitter.visible=BIOME.sea;
+  sunDisk.visible=BIOME.sea||BIOME.id!=='neon';
+  railMat.color.setHex(BIOME.railCol);
+  rails.forEach(r=>{r.visible=BIOME.rail;});
+  gulls.forEach(g=>{g.visible=BIOME.birds;});
+  populateScenery();
+  // Light the menu the same way the run will, so starting a ride never pops.
+  G.tod=BIOME.todLock!==null?BIOME.todLock:0;
+  applyTOD();
+  hemi.intensity=G.todHemi;
 }
 
 // ---------- GUARD RAIL (sea side) ----------
@@ -676,10 +1091,12 @@ function readJSON(k,fb){try{const v=localStorage.getItem(k);return v?JSON.parse(
 function writeJSON(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 
 const BIKES=[
-  {id:'street', name:'STREET 500', cost:0,    color:0xe01500, top:1.00, accel:1.00, grip:1.00, nitro:1.00, blurb:'Balanced starter machine. Forgiving everywhere.'},
-  {id:'neon',   name:'NEON GT',    cost:1200, color:0x00d0ff, top:1.12, accel:1.10, grip:0.92, nitro:1.00, blurb:'Fast and twitchy. Rewards a clean line.'},
-  {id:'dune',   name:'DUNE ADV',   cost:3000, color:0xff8a00, top:1.05, accel:1.04, grip:1.28, nitro:1.18, blurb:'Flicks between lanes and holds a deep nitro tank.'},
-  {id:'phantom',name:'PHANTOM S',  cost:6500, color:0x9b5cff, top:1.24, accel:1.18, grip:1.12, nitro:1.22, blurb:'The endgame superbike. Nothing keeps up.'}
+  {id:'street',  name:'STREET 500',   cost:0,     color:0xe01500, top:1.00, accel:1.00, grip:1.00, nitro:1.00, kind:'Naked standard',   blurb:'Upright, exposed engine, honest. Forgiving everywhere.'},
+  {id:'neon',    name:'NEON GT',      cost:1200,  color:0x00d0ff, top:1.12, accel:1.10, grip:0.92, nitro:1.00, kind:'Sport',            blurb:'Full fairing and clip-ons. Fast, twitchy, rewards a clean line.'},
+  {id:'dune',    name:'DUNE ADV',     cost:3000,  color:0xff8a00, top:1.05, accel:1.04, grip:1.28, nitro:1.18, kind:'Adventure',        blurb:'Tall knobbly wheels and wide bars. Flicks between lanes.'},
+  {id:'roadster',name:'ROADSTER 1200',cost:4500,  color:0xc8402a, top:1.08, accel:1.14, grip:0.84, nitro:1.12, kind:'Cruiser',          blurb:'Long, low and heavy on the torque. Slow to change lanes.'},
+  {id:'phantom', name:'PHANTOM S',    cost:6500,  color:0x9b5cff, top:1.24, accel:1.18, grip:1.12, nitro:1.22, kind:'Superbike',        blurb:'Winglets, twin cans, extreme tuck. Nothing keeps up.'},
+  {id:'volt',    name:'VOLT ZERO',    cost:10000, color:0x19e6d6, top:1.32, accel:1.32, grip:1.20, nitro:1.30, kind:'Electric hyper',   blurb:'Silent, sculpted, no gearbox. The end of the road.'}
 ];
 const UPGRADES=[
   {id:'engine', name:'ENGINE', blurb:'+6% top speed per level'},
@@ -712,6 +1129,8 @@ const ACHS=[
   {id:'near100',  text:'100 near misses'},
   {id:'garage2',  text:'Two bikes in the garage'},
   {id:'garageAll',text:'Every bike owned'},
+  {id:'worlds2',  text:'A second landscape unlocked'},
+  {id:'worldsAll',text:'Every landscape unlocked'},
   {id:'maxed',    text:'An upgrade maxed out'},
   {id:'speed300', text:'300 km/h'}
 ];
@@ -721,6 +1140,8 @@ const P={
   coins:readNum('motoCoast_coins'),
   owned:readJSON('motoCoast_owned',['street']),
   bike:(function(){try{return localStorage.getItem('motoCoast_bike')||'street';}catch(e){return 'street';}})(),
+  world:(function(){try{return localStorage.getItem('motoCoast_world')||'coast';}catch(e){return 'coast';}})(),
+  worldsOwned:readJSON('motoCoast_worlds',['coast']),
   upg:readJSON('motoCoast_upg',{engine:0,nitro:0,grip:0}),
   stats:Object.assign({runs:0,bestDist:0,totalCoins:0,totalNear:0,topSpeed:0},readJSON('motoCoast_stats',{})),
   ach:readJSON('motoCoast_ach',[]),
@@ -729,10 +1150,14 @@ const P={
 };
 if(!Array.isArray(P.owned)||!P.owned.length)P.owned=['street'];
 if(!BIKES.some(b=>b.id===P.bike)||P.owned.indexOf(P.bike)<0)P.bike='street';
+if(!Array.isArray(P.worldsOwned)||!P.worldsOwned.length)P.worldsOwned=['coast'];
+if(!BIOMES.some(b=>b.id===P.world)||P.worldsOwned.indexOf(P.world)<0)P.world='coast';
 UPGRADES.forEach(u=>{if(typeof P.upg[u.id]!=='number')P.upg[u.id]=0;});
 
 function saveP(){
-  try{localStorage.setItem('motoCoast_coins',String(P.coins));localStorage.setItem('motoCoast_bike',P.bike);}catch(e){}
+  try{localStorage.setItem('motoCoast_coins',String(P.coins));localStorage.setItem('motoCoast_bike',P.bike);
+      localStorage.setItem('motoCoast_world',P.world);}catch(e){}
+  writeJSON('motoCoast_worlds',P.worldsOwned);
   writeJSON('motoCoast_owned',P.owned);writeJSON('motoCoast_upg',P.upg);
   writeJSON('motoCoast_stats',P.stats);writeJSON('motoCoast_ach',P.ach);
   writeJSON('motoCoast_missions',P.missions);writeJSON('motoCoast_set',P.set);
@@ -751,9 +1176,12 @@ function ride(){
   };
 }
 function applyBikeLook(){
-  const c=curBike().color;
-  redMat.color.setHex(c);
-  redMat.emissive.setHex(c).multiplyScalar(0.22);
+  const b=curBike();
+  // Rebuilding tears down ~40 meshes, so only do it when the model changes;
+  // a colour swap alone is just two material writes.
+  if(builtBike!==b.id){buildBike(b.id);builtBike=b.id;}
+  redMat.color.setHex(b.color);
+  redMat.emissive.setHex(b.color).multiplyScalar(0.22);
 }
 
 // ---------- MISSIONS ----------
@@ -818,6 +1246,7 @@ function checkAch(){
     first:st.runs>=1, km1:st.bestDist>=1000, km3:st.bestDist>=3000, km5:st.bestDist>=5000,
     coin500:st.totalCoins>=500, coin5k:st.totalCoins>=5000, near100:st.totalNear>=100,
     garage2:P.owned.length>=2, garageAll:P.owned.length>=BIKES.length,
+    worlds2:P.worldsOwned.length>=2, worldsAll:P.worldsOwned.length>=BIOMES.length,
     maxed:UPGRADES.some(u=>P.upg[u.id]>=UPG_MAX), speed300:st.topSpeed>=300
   };
   ACHS.forEach(a=>{if(test[a.id]&&!have(a.id)){P.ach.push(a.id);unlocked.push(a.text);}});
@@ -845,13 +1274,32 @@ function renderGarage(){
     return '<div class="card'+(sel?' sel':'')+(owned?'':' locked')+'">'+
       '<div class="card-top"><span class="dot" style="background:#'+b.color.toString(16).padStart(6,'0')+'"></span>'+
       '<span class="card-name">'+b.name+'</span>'+tag+'</div>'+
-      '<div class="card-blurb">'+b.blurb+'</div>'+
+      '<div class="card-blurb"><b style="color:#ffd23a">'+b.kind+'</b> \u00b7 '+b.blurb+'</div>'+
       '<div class="stats">'+
         '<div class="stat"><span>TOP</span>'+statBar(b.top)+'</div>'+
         '<div class="stat"><span>ACCEL</span>'+statBar(b.accel)+'</div>'+
         '<div class="stat"><span>GRIP</span>'+statBar(b.grip)+'</div>'+
         '<div class="stat"><span>NITRO</span>'+statBar(b.nitro)+'</div>'+
       '</div>'+btn+'</div>';
+  }).join('');
+}
+function renderWorlds(){
+  const list=document.getElementById('worldList');
+  list.innerHTML=BIOMES.map(b=>{
+    const owned=P.worldsOwned.indexOf(b.id)>=0,sel=P.world===b.id;
+    const tag=sel?'<span class="card-tag tag-sel">RIDING</span>':
+               owned?'<span class="card-tag tag-own">UNLOCKED</span>':
+               '<span class="card-tag tag-cost">\u25ce '+b.cost.toLocaleString()+'</span>';
+    const btn=sel?'<button class="cardbtn" disabled>SELECTED</button>':
+              owned?'<button class="cardbtn" data-world="'+b.id+'">RIDE HERE</button>':
+              '<button class="cardbtn" data-buyworld="'+b.id+'"'+(P.coins<b.cost?' disabled':'')+'>'+
+                (P.coins<b.cost?'NEED \u25ce '+(b.cost-P.coins).toLocaleString():'UNLOCK \u25ce '+b.cost.toLocaleString())+'</button>';
+    const swatch=b.sky.slice(2).map(c=>'<span style="flex:1;height:100%;background:'+c+'"></span>').join('');
+    return '<div class="card'+(sel?' sel':'')+(owned?'':' locked')+'">'+
+      '<div class="card-top"><span class="card-name">'+b.name+'</span>'+tag+'</div>'+
+      '<div class="card-blurb"><b style="color:#ffd23a">'+b.tag+'</b> \u00b7 '+b.blurb+'</div>'+
+      '<div style="display:flex;height:14px;border-radius:5px;overflow:hidden;margin-top:9px">'+swatch+'</div>'+
+      btn+'</div>';
   }).join('');
 }
 function renderShop(){
@@ -887,6 +1335,7 @@ function applyQuality(){
 function openPanel(id){
   document.getElementById(id).classList.remove('hidden');
   if(id==='garage')renderGarage();
+  if(id==='worlds')renderWorlds();
   if(id==='shop')renderShop();
   if(id==='settings')renderSettings();
   updateWallet();
@@ -894,6 +1343,7 @@ function openPanel(id){
 function closePanel(id){document.getElementById(id).classList.add('hidden');}
 
 document.getElementById('garageBtn').addEventListener('click',()=>openPanel('garage'));
+document.getElementById('worldBtn').addEventListener('click',()=>openPanel('worlds'));
 document.getElementById('shopBtn').addEventListener('click',()=>openPanel('shop'));
 document.getElementById('setBtn').addEventListener('click',()=>openPanel('settings'));
 document.querySelectorAll('.panel-back').forEach(b=>b.addEventListener('click',()=>closePanel(b.dataset.panel)));
@@ -908,6 +1358,18 @@ document.getElementById('bikeList').addEventListener('click',e=>{
     beep(920,0.18,'square',0.07);showAch('UNLOCKED  '+b.name);
   }else if(sel){
     P.bike=sel;saveP();applyBikeLook();renderGarage();beep(700,0.1,'sine',0.06);
+  }
+});
+document.getElementById('worldList').addEventListener('click',e=>{
+  const buy=e.target.dataset&&e.target.dataset.buyworld,sel=e.target.dataset&&e.target.dataset.world;
+  if(buy){
+    const b=biomeDef(buy);
+    if(P.coins<b.cost||P.worldsOwned.indexOf(buy)>=0)return;
+    P.coins-=b.cost;P.worldsOwned.push(buy);P.world=buy;
+    saveP();applyBiome(P.world);checkAch();renderWorlds();updateWallet();
+    beep(760,0.2,'square',0.07);showAch('UNLOCKED  '+b.name);
+  }else if(sel){
+    P.world=sel;saveP();applyBiome(sel);renderWorlds();beep(660,0.1,'sine',0.06);
   }
 });
 document.getElementById('upgList').addEventListener('click',e=>{
@@ -935,7 +1397,7 @@ document.getElementById('rngSens').addEventListener('input',e=>{P.set.sens=+e.ta
   let armed=false,t=null;
   btn.addEventListener('click',()=>{
     if(!armed){armed=true;btn.textContent='TAP AGAIN';clearTimeout(t);t=setTimeout(()=>{armed=false;btn.textContent='RESET';},3000);return;}
-    ['coins','bike','owned','upg','stats','ach','missions','best','lb','name'].forEach(k=>{
+    ['coins','bike','world','worlds','owned','upg','stats','ach','missions','best','lb','name'].forEach(k=>{
       try{localStorage.removeItem('motoCoast_'+k);}catch(e){}
     });
     location.reload();
@@ -1249,7 +1711,7 @@ function animate(now){
     // bike still feels responsive while everything else crawls.
     const wdt=G.buffs.slow>0?dt*0.55:dt;
     const r=G.ride;
-    G.tod=(G.dist/2600)%1;
+    G.tod=BIOME.todLock!==null?BIOME.todLock:(G.dist/2600)%1;
     applyTOD();
     updateWeather();
 
@@ -1327,8 +1789,8 @@ function animate(now){
     leftScn.forEach(o=>o.position.z+=G.speed*wdt);
     rightScn.forEach(o=>o.position.z+=G.speed*wdt);
     rails.forEach(o=>o.position.z+=G.speed*wdt);
-    recycle(leftScn,o=>{o.position.x=-(9+Math.random()*9);});
-    recycle(rightScn,o=>{o.position.x=8+Math.random()*3.5;});
+    recycle(leftScn,o=>{o.position.x=-(BIOME.leftMin+Math.random()*BIOME.leftRange);});
+    recycle(rightScn,o=>{o.position.x=BIOME.rightMin+Math.random()*BIOME.rightRange;});
     recycle(rails);
 
     obstacles.forEach(o=>{
@@ -1402,7 +1864,7 @@ function animate(now){
 
 window.addEventListener('resize',()=>{camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();renderer.setSize(window.innerWidth,window.innerHeight);});
 
-applyBikeLook();updateWallet();renderMissions();renderSettings();applyQuality();
+applyBiome(P.world);applyBikeLook();updateWallet();renderMissions();renderSettings();applyQuality();
 document.getElementById('loading').classList.add('hidden');
 requestAnimationFrame(animate);
 }

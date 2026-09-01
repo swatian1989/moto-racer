@@ -31,7 +31,9 @@ Dodge traffic, thread the gaps, and get as far as you can before you wipe out.
   while you keep steering at full speed.
 - **Day turns to night** as the run goes on. Stars come out, your headlight
   starts doing real work, and oncoming traffic becomes a pair of lights in the
-  dark before it becomes a car.
+  dark before it becomes a car. The clock rides over whichever landscape you
+  picked, so every world has its own dawn and dusk — except Neon City, which
+  is pinned to night because that is the whole point of it.
 - **Traffic changes lanes** ahead of you — but only while it is still far
   off, so it never swerves into you unfairly.
 - **Weather** rolls between clear, rain and storm, with lightning and a wet,
@@ -42,14 +44,26 @@ Dodge traffic, thread the gaps, and get as far as you can before you wipe out.
 Coins are earned from pickups, distance covered and near misses, then spent in
 the menus on the title screen.
 
-**Garage — four bikes**
+**Garage — six machines**, each a different model rather than a recolour:
+different wheels, stance, bodywork, exhausts and rider posture.
 
-| Bike | Cost | Character |
+| Bike | Type | Cost | Character |
+| --- | --- | --- | --- |
+| Street 500 | Naked standard | free | Upright, exposed engine, forgiving |
+| Neon GT | Sport | 1,200 | Full fairing, clip-ons, twitchy and quick |
+| Dune ADV | Adventure | 3,000 | Tall knobbly wheels, wide bars, panniers |
+| Roadster 1200 | Cruiser | 4,500 | Long and low, twin pipes, slow to turn |
+| Phantom S | Superbike | 6,500 | Winglets, twin cans, extreme tuck |
+| Volt Zero | Electric hyper | 10,000 | Sculpted shell, light strips, no gearbox |
+
+**Worlds — four landscapes**, each with its own sky, terrain, props and mood:
+
+| World | Cost | What it is |
 | --- | --- | --- |
-| Street 500 | free | Balanced starter machine |
-| Neon GT | 1,200 | Fast and twitchy, rewards a clean line |
-| Dune ADV | 3,000 | Flicks between lanes, deep nitro tank |
-| Phantom S | 6,500 | The endgame superbike |
+| Sunset Coastline | free | Golden hour, palms and surf on your right |
+| Canyon Run | 1,500 | Red mesas and saguaro on an empty desert highway |
+| Alpine Pass | 3,500 | Snowbound pines and granite peaks either side |
+| Neon City | 7,000 | Wet asphalt between lit towers — always after dark |
 
 **Upgrades** — three tracks, four levels each: **Engine** (top speed),
 **Nitro** (tank size and refill rate) and **Grip** (how fast you change lanes).
