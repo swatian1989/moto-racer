@@ -1,0 +1,12 @@
+{
+  "appId": "io.github.swatian1989.motoracer",
+  "appName": "Moto Racer",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#1a1230"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "moto-racer-mobile",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Android wrapper for Moto Racer - Coastline",
+  "scripts": {
+    "sync": "node sync-www.js && cap sync android",
+    "apk": "node sync-www.js && cap sync android && cd android && gradlew.bat assembleDebug"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.1",
+    "@capacitor/cli": "^8.5.1",
+    "@capacitor/core": "^8.5.1"
+  }
+}

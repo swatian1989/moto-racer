@@ -131,6 +131,41 @@ app window instead.
 Useful flags: `--serve-only` runs the server with no window, `--browser` forces
 the browser fallback, `--port N` moves the port (which starts a fresh save).
 
+## Android app (APK)
+
+`MotoRacer.apk` is a signed release build that bundles the whole game -
+including the 3D engine - inside the package. Nothing is fetched at runtime, so
+it works offline from the moment it installs.
+
+To install it, copy the APK to your phone and open it. Android will ask you to
+allow installs from that source the first time.
+
+Built with [Capacitor](https://capacitorjs.com). To rebuild:
+
+```sh
+cd mobile
+npm install
+npx cap add android          # regenerates the native project
+python make_android_assets.py   # launcher icons + splash from the game art
+cd .. && python mobile/build_apk.py
+# -> mobile/dist/MotoRacer.apk
+```
+
+Needs **Node**, **JDK 21** (Capacitor 8 will not build on 17) and the Android
+SDK with `platforms;android-36` and `build-tools;36.0.0`.
+
+`mobile/keystore/` holds the signing key and is git-ignored. **Back it up.**
+Android refuses to install an update over an app signed with a different key,
+so losing it means every future version has to be installed fresh.
+
+`mobile/android/`, `mobile/www/` and `node_modules/` are all generated and
+git-ignored; the four small files in `mobile/` reproduce them.
+
+## Tuning
+
+`ECONOMY_RATE` near the top of the progression code scales how fast coins come
+in. Raise it if unlocking drags, lower it if the garage fills too quickly.
+
 ## How it's built
 
 Single-page WebGL game on [three.js](https://threejs.org/) r128 — no build

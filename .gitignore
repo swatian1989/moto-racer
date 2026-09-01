@@ -3,3 +3,15 @@ build/
 dist/
 buildenv/
 *.spec
+
+# android build artifacts
+mobile/node_modules/
+mobile/www/
+mobile/android/
+mobile/dist/
+mobile/package-lock.json
+
+# signing key: losing this means Android refuses to install updates over an
+# existing copy, and publishing it would let anyone forge that update. Back it
+# up somewhere private, never here.
+mobile/keystore/

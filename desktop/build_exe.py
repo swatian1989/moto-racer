@@ -88,7 +88,45 @@ def main():
         raise SystemExit(r.returncode)
 
     exe = os.path.join(DIST, "MotoRacer.exe")
+    sign(exe)
     print("\nbuilt: %s  (%.1f MB)" % (exe, os.path.getsize(exe) / 1048576.0))
+
+
+def sign(exe):
+    """Authenticode-sign the exe if a certificate is configured.
+
+    Unsigned, Windows SmartScreen warns on first run. Set these to sign:
+
+        set MOTORACER_CERT=C:\\path\\to\\cert.pfx
+        set MOTORACER_CERT_PW=...
+
+    Needs signtool.exe from the Windows SDK on PATH. Skipped silently when no
+    certificate is configured, so an unsigned build still succeeds.
+    """
+    cert = os.environ.get("MOTORACER_CERT")
+    if not cert:
+        print("\n(unsigned - set MOTORACER_CERT to sign; SmartScreen will warn on "
+              "first run without it)")
+        return
+    if not os.path.exists(cert):
+        print("\nWARNING: MOTORACER_CERT points at a missing file: " + cert)
+        return
+    signtool = shutil.which("signtool") or shutil.which("signtool.exe")
+    if not signtool:
+        print("\nWARNING: signtool.exe not on PATH (install the Windows SDK); "
+              "leaving the exe unsigned")
+        return
+    cmd = [signtool, "sign", "/fd", "SHA256",
+           "/tr", "http://timestamp.digicert.com", "/td", "SHA256", "/f", cert]
+    pw = os.environ.get("MOTORACER_CERT_PW")
+    if pw:
+        cmd += ["/p", pw]
+    cmd.append(exe)
+    print("\n$ signtool sign ... " + os.path.basename(exe))
+    if subprocess.run(cmd).returncode == 0:
+        print("signed OK")
+    else:
+        print("WARNING: signing failed; the exe is still usable but unsigned")
 
 
 if __name__ == "__main__":

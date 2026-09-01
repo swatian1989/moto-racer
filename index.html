@@ -1127,6 +1127,9 @@ const UPGRADES=[
   {id:'nitro',  name:'NITRO',  blurb:'Bigger tank, faster refill'},
   {id:'grip',   name:'GRIP',   blurb:'Snappier lane changes'}
 ];
+// One knob for how fast the garage fills. The payouts and prices below are
+// balanced against each other; raise this if unlocking feels like a grind.
+const ECONOMY_RATE=2;
 const UPG_COST=[400,900,1800,3200];
 const UPG_MAX=UPG_COST.length;
 
@@ -1670,7 +1673,7 @@ function gameOver(){
 
   // Bank the run: coins picked up, distance covered and near misses all pay.
   const distBonus=Math.floor(G.dist/25),nearBonus=G.run.near*2;
-  const base=G.run.coins*10+distBonus+nearBonus;
+  const base=Math.round((G.run.coins*10+distBonus+nearBonus)*ECONOMY_RATE);
   P.stats.runs++;
   P.stats.totalNear+=G.run.near;
   if(G.dist>P.stats.bestDist)P.stats.bestDist=Math.floor(G.dist);
