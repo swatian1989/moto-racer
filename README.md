@@ -95,6 +95,34 @@ also drops its own resolution automatically if a device cannot hold frame rate.
 Your coins, bikes, upgrades, missions, achievements, best distance and the
 top-10 leaderboard are all stored on your device.
 
+## Desktop app (Windows .exe)
+
+`MotoRacer.exe` is a single self-contained file. Double-click it and the game
+opens in its own window - no browser, no install, no internet.
+
+It works by serving the game from a local web server on a fixed port and
+displaying it in a native WebView2 window. That sounds roundabout, but a
+service worker (and so offline play) will not run from a `file://` origin, and
+the fixed port keeps `localStorage` on a stable origin so your coins, bikes and
+unlocked worlds survive between launches. Progress lives in
+`%LOCALAPPDATA%\MotoRacer`.
+
+To build it yourself:
+
+```sh
+python -m venv buildenv
+buildenv\Scripts\pip install pyinstaller pywebview pillow
+buildenv\Scripts\python desktopuild_exe.py
+# -> dist/MotoRacer.exe
+```
+
+Requires the Microsoft Edge WebView2 runtime, which ships with Windows 11 and
+current Windows 10. Without it the launcher falls back to opening a Chromium
+app window instead.
+
+Useful flags: `--serve-only` runs the server with no window, `--browser` forces
+the browser fallback, `--port N` moves the port (which starts a fresh save).
+
 ## How it's built
 
 Single-page WebGL game on [three.js](https://threejs.org/) r128 — no build

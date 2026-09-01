@@ -1,0 +1,5 @@
+# desktop build artifacts
+build/
+dist/
+buildenv/
+*.spec
